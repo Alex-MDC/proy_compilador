@@ -1,0 +1,6 @@
+program id ; { id = +ctel;}
+program id ; {}
+program id; { if(a > b) {id = ctef; }; } 
+program id ; { print(); }
+program id ; { if(4>5) {id = 22.3}; }
+prog ñ
