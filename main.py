@@ -1,81 +1,196 @@
 # -----------------------------------------------------------------------------
 # main.py
-# Note: P after an uppercase letter means"prime" as in V' --> VP
-# Grammar of littleduck
+# Note: 
+# Grammar
+# terminals: caps   ----------------------------------
+# non terminal: lowercase ----------------------------
 #
-#   PROGRAMA   : program id ; VARSP BLOQUE
-#
-#   VARSP      : VARS
+#   <program>   : dec_variable dvp MAIN block ;
+#   <dvp>   : dec_variable dvp
 #              | empty
 #
-#   VARS       : var id IDP : TIPO ; VP
+#  <statement> : assignment
+#              | condition
+#              | writing
+#              | dec_funct
+#              | loop
+#              | dec_var
+#              | input
+#              | function
+#              | call
+#  
+# <block>    : { BP }
 #
-#   IDP        : , id IDP
+#  <BP>        :  b
+#              | empty
+#  <B>         :  statement bp
+#
+#  <DEC_VARS>  : VAR sp
+#              | VAR cp
+#
+#  <SP>        : simple_type ID da spp
+#
+#  <SPP>       : , ID da spp 
 #              | empty
 #
-#   VP         : id IDP : TIPO ; VP
+#  <DA>        : [ CTE_I ] db
 #              | empty
 #
-#   TIPO     : int
-#            | float
+#  <DB>        : [ CTE_I ]
+#              | empty
 #
-#  BLOQUE    : { BP }
+#  <CP>        : compound_type ID cpp
 #
-#  BP        : ESTATUTO BP
-#            | empty
+#  <CPP>       : , ID cpp
+#              | empty
 #
-#   FACTOR   : ( EXPRESION )
-#            | FP
+#   <FACTOR>   : ( expression )
+#              | fp
+#              | variable
+#              | call
 #   
-#   FP       : MP VARKTE 
+#   <fp>       : mp var_cte 
 #         
-#
-#  MP        : +
+#  <mp>      : +
 #            | - 
 #            | empty 
 # 
-# ESTATUTO   : ASIGNACION 
-#             | CONDICION 
-#             | ESCRITURA
 # 
-# ASIGNACION   : id = EXPRESION ;
+# <var_cte>   : CTE_I  
+#             | CTE_F 
+#             | CTE_CH
 # 
-# EXPRESION   : EXP EP
+# <input>   : ID = INPUT ( variable ) ;
+#
+# <statement>   : assignment 
+#               | condition 
+#               | writing
+#               | dec_funct
+#               | loop
+#               | dec_var
+#               | input
+#               | function
+#               | call
+#
+# <call>        : ID callp
+#
+# <callp>        : cfun
+#                | cc
+#
+# <cfun>        : ( exp cfp )
+#
+# <cfp>        : , exp cfp 
+#              | empty
+#
+# <cc>        : . ID ccp
+#
+# <ccp>        : ( ccpp )
+#              | empty
+#
+# <ccpp>       : exp cl
+#              | empty
+#
+# <cl>         : , exp cl 
+#              | empty
+#
+# <assignment>   : = expression ;
 # 
-#  EP      : > EXP  
-#          | < EXP
-#          | <> EXP
+# <expression>   : exp ep
+# 
+#  <ep>    : epp EXP  
 #          | empty
 #
-#  EXP   : TERMINO XP
-# 
-#   XP    :  + EXP
-#         |  - EXP 
-#         | empty
-# 
-#  TERMINO  : FACTOR TP
-# 
-#    TP    : * TERMINO
-#           | / TERMINO
-#           |  empty
-# 
-#  VARKTE   : id 
-#           | cte_l  
-#           | cte_f
-# 
-# 
-#  CONDICION  : if ( EXPRESION ) BLOQUE CP ;
-# 
-#         CP  :  else BLOQUE 
-#             | empty
-# 
-# ESCRITURA  : print ( PP ) ;
-# 
-# PP   : EXPRESION P 
-#       | cte.string P
+# <epp>    : >
+#          | < 
+#          | <> 
+#          | == 
 #
-#   P  : , PP
-#      | empty
+#  <exp>   : term xp
+# 
+#   <xp>        :  + EXP
+#               |  - EXP 
+#               | empty
+# 
+#  <term>       : factor tp
+# 
+#    <tp>       : * term
+#               | / term
+#               |  empty
+# 
+#  <condition>  : IF ( expression ) block cp ;
+# 
+#  <cp>         :  ELSE block 
+#               | empty
+# 
+# <write>       : print ( expression ) ;
+# 
+#  <variable>   :  vsp
+#               | VAR vcp
+# 
+#  <vsp>        :  simple_type ID a 
+# 
+#  <a>          :  [ exp ] b
+#               | empty
+# 
+#  <b>          :  [ exp ] 
+#               | empty
+#
+# <compund_type> : id      
+#
+#  <simple_type>  : INT
+#                 | FLOAT
+#                 | CHAR
+#                 | BOOL
+#
+# <loop>          : FOR ( for_initial for_condition for_update ) block
+#
+# <for_initial>   : type ID = vi;   
+#
+#  <vi>           : VALUE   
+#                 | ID
+#
+# <for_update>   : ID fu
+#
+# <fu>            : fua vi   
+#                 | fub
+#
+# <fua>           : +=
+#                 | -=
+#                 | *=
+#                 | /=
+#
+# <fub>           : ++
+#                 | --
+#
+# <for_condition> : ID fc vi ;
+#
+# <fc>            : >
+#                 | <
+#                 | ==
+#                 | <>
+#                 | <=
+#                 | >=
+#
+# <class>         : CLASS ID { simple_type ID ; lt function lf } ;
+#
+# <lt>            : simple_type ID ; lt
+#                 | empty
+#
+# <lf>            : function lf
+#                 | empty
+#
+# <function>      : fs ID ( fp ) block
+#
+# <fs>            : simple_type
+#                 | void
+#
+# <fp>            : parameter
+#                 | empty
+#
+# <parameter>     : simple_type ID pl
+#
+# <pl>            : , simple_type ID pl
+#                 | empty
 #
 # -----------------------------------------------------------------------------
 
@@ -88,11 +203,16 @@ reserved = {
    'if' : 'IF',
    'else' : 'ELSE',
    'print' : 'PRINT',
-   'program' : 'PROGRAM',
+ #  'program' : 'PROGRAM',
    'var' : 'VAR',
-   'ctel' : 'CTEL',
-   'ctef' : 'CTEF',
-   'ctestring' : 'CTESTRING'
+  # 'ctel' : 'CTEL',
+ #  'ctef' : 'CTEF',
+  # 'ctestring' : 'CTESTRING'
+   'for' : 'FOR',
+   "input": "INPUT",
+   "void": "VOID", #check if this is valid. also check null
+   "class": "CLASS",
+
 }
 
 # All tokens must be named in advance.
