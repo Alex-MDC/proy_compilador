@@ -205,9 +205,6 @@ reserved = {
    'else' : 'ELSE',
    'print' : 'PRINT',
    'var' : 'VAR',
-  # 'cte_i' : 'CTE_I',
- #  'cte_f' : 'CTE_F',
-  # 'cte_ch' : 'CTE_CHAR'
    'for' : 'FOR',
    "input": "INPUT",
    "void": "VOID", #check if this is valid. also check null
@@ -220,15 +217,14 @@ reserved = {
 tokens = [ 'ID','COLON', 'SEMIC','PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'LPAREN', 'RPAREN',
  'COMMA', 'INT', 'FLOAT', 'LCURL', 'RCURL','EQUALS', 'LSQRE', 'RSQRE','DOT','CHAR',
  'GT', 'LT', 'NOTEQ','ISEQ','BOOL','VALUE','LTEQ','GTEQ','PLUSEQ','MINUSEQ',
-  'TIMESEQ','DIVEQ','PLUSPLUS','MINUSMINUS' ] + list(reserved.values())
+  'TIMESEQ','DIVEQ','PLUSPLUS','MINUSMINUS' ,'CTE_I','CTE_F','CTE_CHAR'] + list(reserved.values())
 
 # Ignored characters
 t_ignore = ' \t'
 
 # Token matching rules are written as regexs
-#t_PROGRAM = r'(program)'
 t_PLUS = r'\+'
-t_COLON = r'\:'
+#t_COLON = r'\:'
 t_SEMIC = r'\;'
 t_MINUS = r'-'
 t_TIMES = r'\*'
