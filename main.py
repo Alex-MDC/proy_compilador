@@ -19,10 +19,11 @@
 #              | function
 #              | call
 #  
-# <block>    : { BP }
+# <block>    : { bp }
 #
-#  <BP>        :  b
+#  <bp>        :  b
 #              | empty
+#
 #  <B>         :  statement bp
 #
 #  <DEC_VARS>  : VAR sp
@@ -203,22 +204,23 @@ reserved = {
    'if' : 'IF',
    'else' : 'ELSE',
    'print' : 'PRINT',
- #  'program' : 'PROGRAM',
    'var' : 'VAR',
-  # 'ctel' : 'CTEL',
- #  'ctef' : 'CTEF',
-  # 'ctestring' : 'CTESTRING'
+  # 'cte_i' : 'CTE_I',
+ #  'cte_f' : 'CTE_F',
+  # 'cte_ch' : 'CTE_CHAR'
    'for' : 'FOR',
    "input": "INPUT",
    "void": "VOID", #check if this is valid. also check null
    "class": "CLASS",
+   "main": "MAIN",
 
 }
 
 # All tokens must be named in advance.
 tokens = [ 'ID','COLON', 'SEMIC','PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'LPAREN', 'RPAREN',
- 'COMMA', 'INT', 'FLOAT', 'LCURL', 'RCURL','EQUALS',
- 'GT', 'LT', 'NOTEQ' ] + list(reserved.values())
+ 'COMMA', 'INT', 'FLOAT', 'LCURL', 'RCURL','EQUALS', 'LSQRE', 'RSQRE','DOT','CHAR',
+ 'GT', 'LT', 'NOTEQ','ISEQ','BOOL','VALUE','LTEQ','GTEQ','PLUSEQ','MINUSEQ',
+  'TIMESEQ','DIVEQ','PLUSPLUS','MINUSMINUS' ] + list(reserved.values())
 
 # Ignored characters
 t_ignore = ' \t'
