@@ -4,7 +4,7 @@
 # Grammar
 # terminals: caps   ----------------------------------
 # non terminal: lowercase ----------------------------
-#
+# TODO: update when needed
 #   <program>   : dec_variable dvp MAIN block ;
 #   <dvp>   : dec_variable dvp
 #              | empty
@@ -206,7 +206,7 @@ reserved = {
     'var' : 'VAR',
     'for' : 'FOR',
     "input": "INPUT",
-    "void": "VOID", # Check if this is valid. Also check null
+    "void": "VOID", # TODO: Check if this is valid. Also check null
     "class": "CLASS",
     "main": "MAIN",
     "int": "INT",
@@ -236,7 +236,7 @@ tokens = [
     'LBRACKET',
     'RBRACKET',
      
-    'INT', 
+    'INT', # TODO: duplicated tokens
     'FLOAT', 
     'CHAR',
     
