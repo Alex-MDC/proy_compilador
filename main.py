@@ -5,47 +5,55 @@
 # terminals: caps   ----------------------------------
 # non terminal: lowercase ----------------------------
 # TODO: update when needed
-#   <program>   : dec_variable dvp MAIN block ;
-#   <dvp>   : dec_variable dvp
+#   <program>   : dv df dc MAIN block 
+#   <dv>       : dec_vars dv
 #              | empty
+#   <df>       : function df
+#              | empty
+#   <dc>       : class dc
+#              | empty
+#
 #
 #  <statement> : assignment
 #              | condition
 #              | writing
-#              | dec_funct
+#              | return
 #              | loop
-#              | dec_var
 #              | input
-#              | function
 #              | call
+#              | arr_assign
 #  
 # <block>    : { bp }
 #
 #  <bp>        :  b
 #              | empty
 #
-#  <B>         :  statement bp
+#  <b>         :  statement bp
 #
-#  <DEC_VARS>  : VAR sp
+#  <dec_vars>  : VAR sp
 #              | VAR cp
 #
-#  <SP>        : simple_type ID da spp
+#  <sp>        : simple_type spp
 #
-#  <SPP>       : , ID da spp 
+#  <spp>       : ID da sppp 
+#  <sppp >     : , spp
+#              | empty
+# 
+#  <da>        : [ CTE_I ] db
+#              | [ CTE_I ] arr_init
+#              | assignment
 #              | empty
 #
-#  <DA>        : [ CTE_I ] db
+#  <db>        : [ CTE_I ]
+#              | [ CTE_I ] arr_init
 #              | empty
 #
-#  <DB>        : [ CTE_I ]
+#  <cp>        : compound_type ID cpp
+#
+#  <cpp>       : , ID cpp
 #              | empty
 #
-#  <CP>        : compound_type ID cpp
-#
-#  <CPP>       : , ID cpp
-#              | empty
-#
-#   <FACTOR>   : ( expression )
+#   <factor>   : ( expression )
 #              | fp
 #              | variable
 #              | call
@@ -63,38 +71,31 @@
 # 
 # <input>   : ID = INPUT ( variable ) ;
 #
-# <statement>   : assignment 
-#               | condition 
-#               | writing
-#               | dec_funct
-#               | loop
-#               | dec_var
-#               | input
-#               | function
-#               | call
+# <call>        : ID callp 
+#               | ID callpp
 #
-# <call>        : ID callp
+# <callp>        : ( callppp )
 #
-# <callp>        : cfun
-#                | cc
+# <callppp>     : exp callpppp
+#               | empty
 #
-# <cfun>        : ( exp cfp )
+# <callppp>     : , exp callpppp
+#               | empty
 #
-# <cfp>        : , exp cfp 
-#              | empty
+# <callpp>       : . ID 
+#               | . ID q
 #
-# <cc>        : . ID ccp
+# <q>           : ( qp )
 #
-# <ccp>        : ( ccpp )
-#              | empty
+# <qp>          : exp qpp
+#               | empty
 #
-# <ccpp>       : exp cl
-#              | empty
+# <qpp>         : , exp qpp
+#               | empty
 #
-# <cl>         : , exp cl 
-#              | empty
-#
-# <assignment>   : = expression ;
+# <assignment>   : assignmentp = expression ;
+# <assignmentp> : id
+#                | empty
 # 
 # <expression>   : exp ep
 # 
@@ -108,8 +109,8 @@
 #
 #  <exp>   : term xp
 # 
-#   <xp>        :  + EXP
-#               |  - EXP 
+#   <xp>        :  + exp
+#               |  - exp 
 #               | empty
 # 
 #  <term>       : factor tp
@@ -118,22 +119,19 @@
 #               | / term
 #               |  empty
 # 
-#  <condition>  : IF ( expression ) block cp ;
+#  <condition>  : IF ( expression ) block cp 
 # 
 #  <cp>         :  ELSE block 
 #               | empty
 # 
-# <write>       : print ( expression ) ;
+# <writing>       : print ( expression ) ;
 # 
-#  <variable>   :  vsp
-#               | VAR vcp
+#  <variable>   : ID ap
 # 
-#  <vsp>        :  simple_type ID a 
-# 
-#  <a>          :  [ exp ] b
+#  <ap>          :  [ exp ] bp
 #               | empty
 # 
-#  <b>          :  [ exp ] 
+#  <bp>          :  [ exp ] 
 #               | empty
 #
 # <compund_type> : id      
@@ -143,34 +141,7 @@
 #                 | CHAR
 #                 | BOOL
 #
-# <loop>          : FOR ( for_initial for_condition for_update ) block
-#
-# <for_initial>   : type ID = vi;   
-#
-#  <vi>           : VALUE   
-#                 | ID
-#
-# <for_update>   : ID fu
-#
-# <fu>            : fua vi   
-#                 | fub
-#
-# <fua>           : +=
-#                 | -=
-#                 | *=
-#                 | /=
-#
-# <fub>           : ++
-#                 | --
-#
-# <for_condition> : ID fc vi ;
-#
-# <fc>            : >
-#                 | <
-#                 | ==
-#                 | <>
-#                 | <=
-#                 | >=
+# <loop>          : FOR ID = exp TO exp DO statement ;
 #
 # <class>         : CLASS ID { simple_type ID ; lt function lf } ;
 #
@@ -180,7 +151,7 @@
 # <lf>            : function lf
 #                 | empty
 #
-# <function>      : fs ID ( fp ) block
+# <function>      : fs ID ( fp ) dec_vars block
 #
 # <fs>            : simple_type
 #                 | void
@@ -190,8 +161,29 @@
 #
 # <parameter>     : simple_type ID pl
 #
-# <pl>            : , simple_type ID pl
+# <pl>            : , parameter
 #                 | empty
+#
+# <arr_init>       : = { aip }
+#
+# <aip>            : var_cte aipp
+#                 | { var_cte aipp } aippp
+#
+# <aipp>            : , var_cte aipp
+#                 | empty
+#
+# <aippp>         : , { var_cte aipp } aippp
+#                 | empty
+#
+# <arr_assign>    : ID arr_assign1 = expression ;
+# 
+#  <arr_assign1>  :  [ exp ] arr_assign2
+# 
+#  <arr_assign2> :  [ exp ] 
+#                | empty
+#
+# <return>        : RETURN id
+#                 | RETURN expression
 #
 # -----------------------------------------------------------------------------
 
@@ -213,12 +205,14 @@ reserved = {
     "float": "FLOAT",
     "char": "CHAR",
     "bool": "BOOL",
-    "return": "RETURN"
+    "return": "RETURN",
+    "to" : "TO",
+    "do" : "DO",
 }
 
 # All tokens must be named in advance.
 tokens = [
-    'ID',
+    'ID', #TODO check id doesnt overwrite 
 
     'PLUS',
     'MINUS', 
@@ -236,34 +230,27 @@ tokens = [
     'LBRACKET',
     'RBRACKET',
      
-    'INT', # TODO: duplicated tokens
-    'FLOAT', 
-    'CHAR',
+    'CTE_INT', 
+    'CTE_FLOAT', 
+    'CTE_CHAR',
+    'CTE_BOOL',
     
     'EQUALS',
+    'EQEQ',
     'GT', 
     'LT', 
     'NOTEQ',
     'LESS_OR_EQ_THAN',
     'GREATER_OR_EQ_THAN',
 
-    'INCREMENT_ONE',
-    'DECREMENT_ONE',
-
-    'LSQRE', 
-    'RSQRE',
     'ISEQ',
-    'BOOL',
     'VALUE',
     'LTEQ',
     'GTEQ',
     'PLUSEQ',
     'MINUSEQ',
     'TIMESEQ',
-    'DIVEQ',
-    'CTE_I',
-    'CTE_F',
-    'CTE_CHAR'
+    'DIVEQ'
 ] + list(reserved.values())
 
 # Ignored characters
@@ -285,12 +272,11 @@ t_LCURL     = r'\{'
 t_RCURL     = r'\}'
 t_LBRACKET  = r'\['
 t_RBRACKET  = r'\]'
-#t_VAR      = r'[a-zA-Z_][a-zA-Z0-9_]*'
-#t_VAR      = r'(var)'
 
-t_INT       = r'\d+'
-t_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
-#t_STRING   = r'\".*?\"'
+t_CTE_INT       = r'\d+'
+t_CTE_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
+t_CTE_CHAR      = r'"[^"]"'
+t_CTE_BOOL      = r'^(True|False)$'
 
 t_EQUALS    = r'='
 t_GT        = r'>'
@@ -298,15 +284,7 @@ t_LT        = r'<'
 t_NOTEQ     = r'<>'
 t_LESS_OR_EQ_THAN = r'<='
 t_GREATER_OR_EQ_THAN = r'>='
-
-t_INCREMENT_ONE = r'\++'
-t_DECREMENT_ONE = r'--'
-# Missing +=, -=, *=, /=
-
-#t_CTEL     = r'(ctel)'
-#t_CTEF     = r'(ctef)'
-#t_CTESTRING= r'(ctestring)'
-
+t_EQEQ     = r'=='
 
 # A function can be used if there is an associated action.
 # Write the matching regex in the docstring.
@@ -338,12 +316,14 @@ lexer = lex()
 
 # Test it out
 data = f'''
-var id ,; 5 > <> 4.5 pelos
+float rf
 if (largo >= 5)
 void suma() {{
-    largo++;
-    otro --;
-    5/2
+    int a , b
+    a==b
+    a=b
+    rf==a
+    char c = "r"
 }}
 '''
 
