@@ -39,13 +39,13 @@
 #  <sppp >     : , spp
 #              | empty
 # 
-#  <da>        : [ CTE_I ] db
-#              | [ CTE_I ] arr_init
+#  <da>        : [ CTE_INT ] db
+#              | [ CTE_INT ] arr_init
 #              | assignment
 #              | empty
 #
-#  <db>        : [ CTE_I ]
-#              | [ CTE_I ] arr_init
+#  <db>        : [ CTE_Int ]
+#              | [ CTE_Int ] arr_init
 #              | empty
 #
 #  <cp>        : compound_type ID cpp
@@ -65,9 +65,9 @@
 #            | empty 
 # 
 # 
-# <var_cte>   : CTE_I  
-#             | CTE_F 
-#             | CTE_CH
+# <var_cte>   : CTE_INT  
+#             | CTE_FLOAT
+#             | CTE_CHAR
 # 
 # <input>   : ID = INPUT ( variable ) ;
 #
@@ -79,7 +79,7 @@
 # <callppp>     : exp callpppp
 #               | empty
 #
-# <callppp>     : , exp callpppp
+# <callpppp>     : , exp callpppp
 #               | empty
 #
 # <callpp>       : . ID 
@@ -99,7 +99,7 @@
 # 
 # <expression>   : exp ep
 # 
-#  <ep>    : epp EXP  
+#  <ep>    : epp exp  
 #          | empty
 #
 # <epp>    : >
@@ -154,7 +154,7 @@
 # <function>      : fs ID ( fp ) dec_vars block
 #
 # <fs>            : simple_type
-#                 | void
+#                 | VOID
 #
 # <fp>            : parameter
 #                 | empty
