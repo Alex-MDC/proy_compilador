@@ -5,14 +5,25 @@
 # terminals: caps   ----------------------------------
 # non terminal: lowercase ----------------------------
 # TODO: update when needed
-#   <program>   : dv df dc MAIN block 
-#   <dv>       : dec_vars dv
-#              | empty
-#   <df>       : function df
-#              | empty
-#   <dc>       : class dc
-#              | empty
+#  <program>  : dv df dc MAIN block 
 #
+#  <dv>       : dec_vars
+#             | empty
+#
+#  <df>       : function df
+#             | empty
+#
+#  <dc>       : class dc
+#             | empty
+# ------------------------------
+#
+#  <block>    : { block2 }
+#
+#  <block2>   :  block3
+#             | empty
+#
+#  <block3>   :  statement block2
+# ------------------------------
 #
 #  <statement> : assignment
 #              | condition
@@ -22,168 +33,180 @@
 #              | input
 #              | call
 #              | arr_assign
-#  
-# <block>    : { bp }
+# ------------------------------
 #
-#  <bp>        :  b
-#              | empty
+#  <dec_vars>       : VAR dec_vars2
+#                   | VAR dec_vars3
 #
-#  <b>         :  statement bp
+#  <dec_vars2>      : simple_type dec_vars4
 #
-#  <dec_vars>  : VAR sp
-#              | VAR cp
-#
-#  <sp>        : simple_type spp
-#
-#  <spp>       : ID da sppp 
-#  <sppp >     : , spp
-#              | empty
+#  <dec_vars4>      : ID dec_vars6 dec_vars5 
+#  <dec_vars5>      : , dec_vars4
+#                   | empty
 # 
-#  <da>        : [ CTE_INT ] db
-#              | [ CTE_INT ] arr_init
-#              | assignment
-#              | empty
+#  <dec_vars6>      : [ CTE_INT ] dec_vars7
+#                   | [ CTE_INT ] arr_init
+#                   | assignment
+#                   | empty
 #
-#  <db>        : [ CTE_Int ]
-#              | [ CTE_Int ] arr_init
-#              | empty
+#  <dec_vars7>      : [ CTE_Int ]
+#                   | [ CTE_Int ] arr_init
+#                   | empty
 #
-#  <cp>        : compound_type ID cpp
+#  <dec_vars3>      : compound_type ID dec_vars8
 #
-#  <cpp>       : , ID cpp
-#              | empty
+#  <dec_vars8>      : , ID dec_vars8
+#                   | empty
+# ------------------------------
 #
-#   <factor>   : ( expression )
-#              | fp
-#              | variable
-#              | call
-#   
-#   <fp>       : mp var_cte 
-#         
-#  <mp>      : +
-#            | - 
-#            | empty 
-# 
-# 
-# <var_cte>   : CTE_INT  
-#             | CTE_FLOAT
-#             | CTE_CHAR
-# 
-# <input>   : ID = INPUT ( variable ) ;
+#  <function>      : function2 ID ( function3 ) dec_vars block
 #
-# <call>        : ID callp 
-#               | ID callpp
+#  <function2>     : simple_type
+#                  | VOID
 #
-# <callp>        : ( callppp )
+#  <function3>     : parameter
+#                  | empty
+# ------------------------------
 #
-# <callppp>     : exp callpppp
-#               | empty
+#  <class>         : CLASS ID { simple_type ID ; class2 function class3 } ;
 #
-# <callpppp>     : , exp callpppp
-#               | empty
+#  <class2>        : simple_type ID ; class2
+#                  | empty
 #
-# <callpp>       : . ID 
-#               | . ID q
+#  <class3>        : function class3
+#                  | empty
+# ------------------------------
 #
-# <q>           : ( qp )
+#  <arr_init>      : = { arr_init2 }
 #
-# <qp>          : exp qpp
-#               | empty
+#  <arr_init2>     : var_cte arr_init3
+#                  | { var_cte arr_init3 } arr_init4
 #
-# <qpp>         : , exp qpp
-#               | empty
+#  <arr_init3>     : , var_cte arr_init3
+#                  | empty
 #
-# <assignment>   : assignmentp = expression ;
-# <assignmentp> : id
-#                | empty
-# 
-# <expression>   : exp ep
-# 
-#  <ep>    : epp exp  
-#          | empty
+#  <arr_init4>     : , { var_cte arr_init3 } arr_init4
+#                  | empty
+# ------------------------------
 #
-# <epp>    : >
-#          | < 
-#          | <> 
-#          | == 
-#
-#  <exp>   : term xp
-# 
-#   <xp>        :  + exp
-#               |  - exp 
-#               | empty
-# 
-#  <term>       : factor tp
-# 
-#    <tp>       : * term
-#               | / term
-#               |  empty
-# 
-#  <condition>  : IF ( expression ) block cp 
-# 
-#  <cp>         :  ELSE block 
-#               | empty
-# 
-# <writing>       : print ( expression ) ;
-# 
-#  <variable>   : ID ap
-# 
-#  <ap>          :  [ exp ] bp
-#               | empty
-# 
-#  <bp>          :  [ exp ] 
-#               | empty
-#
-# <compund_type> : id      
+#  <compund_type> : id      
+# ------------------------------
 #
 #  <simple_type>  : INT
 #                 | FLOAT
 #                 | CHAR
 #                 | BOOL
+# ------------------------------
 #
-# <loop>          : FOR ID = exp TO exp DO statement ;
-#
-# <class>         : CLASS ID { simple_type ID ; lt function lf } ;
-#
-# <lt>            : simple_type ID ; lt
+#  <assignment>   : assignmentp = expression ;
+#  <assignmentp>  : id
 #                 | empty
+# ------------------------------
 #
-# <lf>            : function lf
-#                 | empty
+#  <parameter>     : simple_type ID parameter2
 #
-# <function>      : fs ID ( fp ) dec_vars block
-#
-# <fs>            : simple_type
-#                 | VOID
-#
-# <fp>            : parameter
-#                 | empty
-#
-# <parameter>     : simple_type ID pl
-#
-# <pl>            : , parameter
-#                 | empty
-#
-# <arr_init>       : = { aip }
-#
-# <aip>            : var_cte aipp
-#                 | { var_cte aipp } aippp
-#
-# <aipp>            : , var_cte aipp
-#                 | empty
-#
-# <aippp>         : , { var_cte aipp } aippp
-#                 | empty
-#
-# <arr_assign>    : ID arr_assign1 = expression ;
+#  <parameter2>    : , parameter
+#                  | empty
+# ------------------------------
 # 
-#  <arr_assign1>  :  [ exp ] arr_assign2
+#  <var_cte>   : CTE_INT  
+#              | CTE_FLOAT
+#              | CTE_CHAR
+# ------------------------------
 # 
-#  <arr_assign2> :  [ exp ] 
-#                | empty
+#  <expression>     : exp expression2
+# 
+#  <expression2>    : expression3 exp  
+#                   | empty
 #
-# <return>        : RETURN id
-#                 | RETURN expression
+#  <expression3>    : >
+#                   | < 
+#                   | <> 
+#                   | == 
+# ------------------------------
+#
+#  <exp>   : term exp2
+# 
+#  <exp2>  :  + exp
+#          |  - exp 
+#          | empty
+# ------------------------------
+# 
+#  <term>     : factor term2
+# 
+#  <term2>    : * term
+#             | / term
+#             |  empty
+# ------------------------------
+#
+#  <factor>    : ( expression )
+#              | factor2
+#              | variable
+#              | call
+#   
+#  <factor2>   : factor3 var_cte 
+#         
+#  <factor3>   : +
+#              | - 
+#              | empty 
+# ------------------------------
+#
+#  <variable>   : ID variable2
+# 
+#  <variable2>  : [ exp ] variable3
+#               | empty
+# 
+#  <variable3>  : [ exp ] 
+#               | empty
+# ------------------------------
+#
+#  <call>       : ID call2 
+#               | ID call3
+#
+#  <call2>      : ( call4 )
+#
+#  <call4>      : exp call5
+#               | empty
+#
+#  <call5>      : , exp call5
+#               | empty
+#
+#  <call3>      : . ID 
+#               | . ID call6
+#
+#  <call6>      : ( call7 )
+#
+#  <call7>      : exp call8
+#               | empty
+#
+#  <call8>      : , exp call8
+#               | empty
+# ------------------------------
+#
+#  <condition>  : IF ( expression ) block condition2 
+# 
+#  <condition2> :  ELSE block 
+#               | empty
+# ------------------------------
+#
+#  <writing>    : print ( expression ) ;
+# ------------------------------
+#
+#  <return>        : RETURN id
+#                  | RETURN expression
+# ------------------------------
+#
+#  <loop>          : FOR ID = exp TO exp DO statement ;
+# ------------------------------
+#
+#  <input>     : ID = INPUT ( variable ) ;
+# ------------------------------
+#  <arr_assign>    : ID arr_assign1 = expression ;
+# 
+#  <arr_assign1>   : [ exp ] arr_assign2
+# 
+#  <arr_assign2>   : [ exp ] 
+#                  | empty
 #
 # -----------------------------------------------------------------------------
 
@@ -243,14 +266,15 @@ tokens = [
     'LESS_OR_EQ_THAN',
     'GREATER_OR_EQ_THAN',
 
-    'ISEQ',
-    'VALUE',
-    'LTEQ',
-    'GTEQ',
-    'PLUSEQ',
-    'MINUSEQ',
-    'TIMESEQ',
-    'DIVEQ'
+    # --- TOKENS NOT USED ---
+    # 'ISEQ',
+    # 'VALUE',
+    # 'LTEQ',
+    # 'GTEQ',
+    # 'PLUSEQ',
+    # 'MINUSEQ',
+    # 'TIMESEQ',
+    # 'DIVEQ'
 ] + list(reserved.values())
 
 # Ignored characters
@@ -276,7 +300,7 @@ t_RBRACKET  = r'\]'
 t_CTE_INT       = r'\d+'
 t_CTE_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
 t_CTE_CHAR      = r'"[^"]"'
-t_CTE_BOOL      = r'^(True|False)$'
+t_CTE_BOOL      = r'\b(True|False)\b'
 
 t_EQUALS    = r'='
 t_GT        = r'>'
@@ -289,17 +313,10 @@ t_EQEQ     = r'=='
 # A function can be used if there is an associated action.
 # Write the matching regex in the docstring.
 
-# Reserved words
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = reserved.get(t.value,'ID')    # Check for reserved words
     return t
-
-#def t_FLOAT(t):
-#    r'\d+'
-#    t.value = float(t.value)
-#    return t
-
 
 # Ignored token with an action associated with it
 def t_ignore_newline(t):
@@ -316,15 +333,8 @@ lexer = lex()
 
 # Test it out
 data = f'''
-float rf
-if (largo >= 5)
-void suma() {{
-    int a , b
-    a==b
-    a=b
-    rf==a
-    char c = "r"
-}}
+False True
+main {{ if True 4 >= <=}}
 '''
 
 # Give the lexer some input
