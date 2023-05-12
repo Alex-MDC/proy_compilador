@@ -1,5 +1,6 @@
 import ply.yacc as yacc
 from main import tokens
+from semantic import *
 
 #---------------------------
 # --- Parser
@@ -275,11 +276,15 @@ def p_parameter2(p):
 
 def p_var_cte(p):
     '''
-    var_cte : CTE_INT
+    var_cte : CTE_INT 
        | CTE_FLOAT
        | CTE_CHAR
     '''
     p[0] = ('var_cte',p[1] )
+    #TODO call addconstant
+    
+
+
 
 def p_expression(p):
     '''
