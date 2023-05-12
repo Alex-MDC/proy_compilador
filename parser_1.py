@@ -545,6 +545,7 @@ while True:
   except EOFError:
       break
   if not s: continue
+  #result contains the AST tree
   result = parser.parse(s)
   print(result)
 
