@@ -27,8 +27,10 @@ import pprint
 
 #global components -------
 #type and scope is given by memory direction
+
 #TODO dir funciones  ---- dir vars --> list of dictionaries
-#function signature: return type, name, params, 
+
+#function signature: return type, name, param sequence
 # funDict =[{"functionID":2,"type":"void","params":{}, "varTable":???}] TODO define all structures
 funDict =[]
 globalVars =[]
@@ -64,65 +66,12 @@ def addConstant(constantVal):
         newCte = {"memoryDir":memTypeCounter,"value":constantVal}
         constants.append(newCte.copy())
 
+def getVar(id):
+    #verify if the id exists in the current table
+
+    pass
 
 
-
-
-
-#semantic cube follows this order of indexes:
-# semanticCube[operation][leftOperator type][right operator type]
-#example:  int * float --> semanticCube [2] [0][1] = 1 
-#which means that the type of the multiplication of an int with a float is a float 
-#cube dimensions: 10x4x4
-def createSemanticCube():
-    global semanticCube
-    semanticCube = [
-        [[0,1,-1,-1],
-         [1,1,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #0
-        [[0,1,-1,-1],
-         [1,1,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #1
-        [[0,1,-1,-1],
-         [1,1,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #2
-        [[0,1,-1,-1],
-         [1,1,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #3
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #4
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #5
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #6
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,-1,-1],
-         [-1,-1,-1,-1]],   #7
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,3,-1],
-         [-1,-1,-1,3]],    #8
-        [[3,3,-1,-1],
-         [3,3,-1,-1],
-         [-1,-1,3,-1],
-         [-1,-1,-1,3]]     #9
- 
-    ]
-    #pprint.pprint(semanticCube)
-    # print("------------------------------")
-    # print(semanticCube[2][0][1])
-
-    def delSemanticCube():
-        global semanticCube
-        del semanticCube
+# class functions:
+#     def __init__(self):
+#         pass
