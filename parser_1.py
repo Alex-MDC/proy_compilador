@@ -375,7 +375,9 @@ def p_variable(p):
     '''
     variable : ID variable2
     '''
+    #   TODO verify ID exists in current function
     p[0] = ('variable',p[1], p[2])
+    
 
 def p_variable2(p):
     '''
@@ -383,6 +385,8 @@ def p_variable2(p):
        | empty
     '''
     if (len(p) == 5):
+     #TODO verify type of p[2] exp is int
+
      p[0] = ('variable2',p[1],p[2],p[3],p[4])
     else:
         p[0] = p[1] 
