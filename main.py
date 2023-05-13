@@ -41,6 +41,7 @@
 #  <dec_vars2>      : simple_type dec_vars4
 #
 #  <dec_vars4>      : ID dec_vars6 dec_vars5 
+#
 #  <dec_vars5>      : , dec_vars4
 #                   | empty
 # 
