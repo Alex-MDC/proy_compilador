@@ -1,7 +1,8 @@
 import ply.yacc as yacc
 from main import tokens
 from semantic import *
-
+from Context import Context
+from FunctionTable import FunctionTable
 #---------------------------
 # --- Parser
 
@@ -9,18 +10,33 @@ from semantic import *
 # specified in the docstring.
 #terminales en mayus. no term en minsuc
 
+curr = Context()
+functionTable = FunctionTable()
+
 def p_program(p):
     '''
     program : dv df dc MAIN block
     '''
-    
+    functionTable.print_function_table()
     p[0] = ('begin program', p[1], p[2], p[3],p[4],p[5])
 
 def p_dv(p):
     '''
-    dv : dec_vars
+    dv : dec_vars dv
         | empty
     '''
+    # Add function to function table
+    functionTable.add_function('Global', 'int')
+
+    # Now that we know to which function the temp_vars belongs to, assign it officially in function table 
+    for variables in curr.vars:
+        for var, var_type in variables.items():
+            if (functionTable.add_var_to_function('Global', var, var_type) is None):
+                raise yacc.YaccError("Variable already declared")
+    
+    # Clear temp vars_table so another function can use it
+    curr.clearVars()
+
     if (len(p) == 3):
         p[0] = (p[1],p[2])
     else:
@@ -95,6 +111,10 @@ def p_dec_vars4(p):
     '''
     dec_vars4 : ID dec_vars6 dec_vars5
     '''
+    
+    # Add var name and type to a temp var_table that does not belong to any function yet
+    curr.setVars(p[1], curr.getCurrType())
+
     p[0]=('dec_vars4',p[1],p[2],p[3])
 
 def p_dec_vars5(p):
@@ -152,6 +172,19 @@ def p_function(p):
     '''
     function : function2 ID LPAREN function3 RPAREN dec_vars block
     '''
+    # Add function to function table
+    if (functionTable.add_function(p[2], p[1][1][1]) is None):
+        raise yacc.YaccError("Function already declared")
+    
+    # Now that we know to which function the temp_vars belongs to, assign it officially in function table
+    for variables in curr.vars:
+        for var, var_type in variables.items():
+            if (functionTable.add_var_to_function(p[2], var, var_type) is None):
+                raise yacc.YaccError("Variable already declared")
+
+    # Clear temp vars_table so another function can use it
+    curr.clearVars()
+
     p[0] = ('function',p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 
 def p_function2(p):
@@ -243,6 +276,8 @@ def p_simple_type(p):
         | CHAR
         | BOOL
     '''
+    curr.setCurrType(p[1])
+    
     p[0]=('simple_type',p[1]) 
 
 def p_assignment(p):
@@ -262,6 +297,10 @@ def p_parameter(p):
     '''
     parameter : simple_type ID parameter2
     '''
+
+    # Add var name and type to a temp var_table that does not belong to any function yet
+    curr.setVars(p[2], p[1][1])
+    
     p[0] = ('parameter',p[1],p[2],p[3])
 
 def p_parameter2(p):
@@ -536,6 +575,7 @@ def p_empty(p):
 
 def p_error(p):
     print(f'Syntax error in {p.value}')
+    raise SyntaxError
 
 # Build the parser
 parser = yacc.yacc()

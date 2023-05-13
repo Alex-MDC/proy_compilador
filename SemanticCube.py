@@ -63,12 +63,15 @@ class SemanticCube:
         # for op in ['&&', '||']:
         #     self.cube[op]['bool']['bool'] = 'bool'
 
+    # If None is returned, an error occured
     def get_result_type(self, operator, operand1_type, operand2_type):
         return self.cube[operator][operand1_type][operand2_type]
 
 
+# Testing
 cube = SemanticCube()
-result_type = cube.get_result_type('*', 'float','float')
+result_type = cube.get_result_type('*', 'char','float')
+print(cube.cube['*']['int']['int'])
 
 if result_type is None:
     print(f'Invalid operation')
