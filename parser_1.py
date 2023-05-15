@@ -3,6 +3,8 @@ from main import tokens
 from semantic import *
 from Context import Context
 from FunctionTable import FunctionTable
+from SemanticCube import *
+from VariableTable import *
 #---------------------------
 # --- Parser
 
@@ -12,6 +14,8 @@ from FunctionTable import FunctionTable
 
 curr = Context()
 functionTable = FunctionTable()
+cube = SemanticCube()
+globalConstantTable = VariableTable()
 
 def p_program(p):
     '''
@@ -320,6 +324,32 @@ def p_var_cte(p):
        | CTE_CHAR
     '''
     p[0] = ('var_cte',p[1] )
+
+    if(isinstance(p[1],int)):
+        if (globalConstantTable.get_var_type(p[1]) == None):
+            curr.setCurrType('int')
+            globalConstantTable.add_var(p[1],curr.getCurrType())
+            #incrementar counter de ints
+
+    elif(isinstance(p[1], float)):
+        #the constant is new
+        if (globalConstantTable.get_var_type(p[1]) == None):
+            curr.setCurrType('float')
+            #TODO increment flot count
+            globalConstantTable.add_var(p[1],curr.getCurrType())
+
+    else:
+        #it's a char
+        #the constant is new
+        if (globalConstantTable.get_var_type(p[1]) == None):
+            curr.setCurrType('char')
+            #TODO increment char count
+            globalConstantTable.add_var(p[1],curr.getCurrType())
+    
+    if (globalConstantTable.get_var_type(p[1]) == None):
+        #the constant is new
+        globalConstantTable.add_var(p[1],curr.getCurrType())
+ 
     #TODO call addconstant
     
 
@@ -329,6 +359,9 @@ def p_expression(p):
     '''
     expression : exp expression2
     '''
+    #we must save the firt potential type of exp
+    curr.setLeftType(curr.getCurrType())
+
     p[0] = ('expression',p[1],p[2])
 
 def p_expression2(p):
@@ -337,6 +370,20 @@ def p_expression2(p):
        | empty
     '''
     if (len(p) == 3):
+     #we are in a relation operation
+     curr.setRelationOp(p[1])
+     curr.setRightType(curr.getCurrType())
+     #verify types with cube
+     curr.setCurrType(cube.get_result_type(curr.getRelationOp(),curr.getLeftType(),curr.getRightType()))
+     if( curr.getCurrType != None ):
+         #it is a valid operation
+         #TODO generate quad
+         pass
+     else:
+         print("ERROR, TYPE MISMATCH")
+         #TODO end prog/funct
+         
+         
      p[0] = ('expression2',p[1],p[2])
     else:
         p[0] = p[1] 

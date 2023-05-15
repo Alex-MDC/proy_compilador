@@ -69,11 +69,11 @@ class SemanticCube:
 
 
 # Testing
-cube = SemanticCube()
-result_type = cube.get_result_type('*', 'char','float')
-print(cube.cube['*']['int']['int'])
+# cube = SemanticCube()
+# result_type = cube.get_result_type('*', 'char','float')
+# print(cube.cube['*']['int']['int'])
 
-if result_type is None:
-    print(f'Invalid operation')
-else:
-    print(f'Result type: {result_type}')
+# if result_type is None:
+#     print(f'Invalid operation')
+# else:
+#     print(f'Result type: {result_type}')
