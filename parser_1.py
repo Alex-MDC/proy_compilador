@@ -414,6 +414,7 @@ def p_variable(p):
     '''
     variable : ID variable2
     '''
+    p[0] = p[1]
     #   TODO verify ID exists in current function
     # p[0] = ('variable',p[1], p[2])
     
