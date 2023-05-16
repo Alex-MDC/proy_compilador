@@ -1,8 +1,10 @@
 import ply.yacc as yacc
 from main import tokens
-from semantic import *
 from Context import Context
 from FunctionTable import FunctionTable
+from Quadruples import Quadruples 
+from VariableTable import VariableTable
+from SemanticCube import SemanticCube
 #---------------------------
 # --- Parser
 
@@ -12,13 +14,33 @@ from FunctionTable import FunctionTable
 
 curr = Context()
 functionTable = FunctionTable()
+quadruples = Quadruples()
+constantsTable = VariableTable()
+semanticCube = SemanticCube()
 
 def p_program(p):
     '''
-    program : dv df dc MAIN block
+    program : set_global_scope dv df dc MAIN block
     '''
     functionTable.print_function_table()
+    functionTable.delete_function_table()
+    quadruples.print_stacks()
+
+    print("Constant's table: ")
+    constantsTable.print_var_table()
+
+    # We are out of the current scope
+    curr.popScope()
+
     p[0] = ('begin program', p[1], p[2], p[3],p[4],p[5])
+
+def p_set_global_scope(p):
+    "set_global_scope :"
+    # Set current scope
+    curr.setScope('main')
+
+    # Add to function table
+    functionTable.add_function('main', 'int')
 
 def p_dv(p):
     '''
@@ -26,16 +48,7 @@ def p_dv(p):
         | empty
     '''
     # Add function to function table
-    functionTable.add_function('Global', 'int')
-
-    # Now that we know to which function the temp_vars belongs to, assign it officially in function table 
-    for variables in curr.vars:
-        for var, var_type in variables.items():
-            if (functionTable.add_var_to_function('Global', var, var_type) is None):
-                raise yacc.YaccError("Variable already declared")
-    
-    # Clear temp vars_table so another function can use it
-    curr.clearVars()
+    functionTable.add_function('main', 'int')
 
     if (len(p) == 3):
         p[0] = (p[1],p[2])
@@ -111,9 +124,12 @@ def p_dec_vars4(p):
     '''
     dec_vars4 : ID dec_vars6 dec_vars5
     '''
+    # Add var and check if variable is not already declared within current function (scope) or globally
+    if (functionTable.get_var_type_in_function('main', p[1])):
+        raise yacc.YaccError(f"Variable {p[1]} already declared globally")
     
-    # Add var name and type to a temp var_table that does not belong to any function yet
-    curr.setVars(p[1], curr.getCurrType())
+    if (functionTable.add_var_to_function(curr.getScope(), p[1], curr.getCurrType()) is None):
+        raise yacc.YaccError(f"Variable {p[1]} already declared")
 
     p[0]=('dec_vars4',p[1],p[2],p[3])
 
@@ -170,20 +186,17 @@ def p_dec_vars8(p):
 
 def p_function(p):
     '''
-    function : function2 ID LPAREN function3 RPAREN dec_vars block
+    function : function2 ID set_scope LPAREN function3 RPAREN dec_vars block
     '''
-    # Add function to function table
-    if (functionTable.add_function(p[2], p[1][1][1]) is None):
-        raise yacc.YaccError("Function already declared")
-    
-    # Now that we know to which function the temp_vars belongs to, assign it officially in function table
-    for variables in curr.vars:
-        for var, var_type in variables.items():
-            if (functionTable.add_var_to_function(p[2], var, var_type) is None):
-                raise yacc.YaccError("Variable already declared")
+    # Set list of parameters' types to function
+    for param in reversed(curr.params):
+        functionTable.add_param_to_function(p[2], param)
 
-    # Clear temp vars_table so another function can use it
-    curr.clearVars()
+    # Clear temp params so another function can use them
+    curr.clearParams()
+
+    # We are out of the current scope
+    curr.popScope()
 
     p[0] = ('function',p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 
@@ -192,7 +205,7 @@ def p_function2(p):
     function2 : simple_type
               | VOID
     '''
-    p[0] = ('function2',p[1] )
+    p[0] = p[1]
 
 def p_function3(p):
     '''
@@ -200,6 +213,15 @@ def p_function3(p):
               | empty
     '''
     p[0] = ('function3',p[1] )
+
+def p_set_scope(p):
+    "set_scope :"
+    # Set current scope
+    curr.setScope(p[-1])
+
+    # Add function to function table
+    if (functionTable.add_function(p[-1], p[-2]) is None):
+        raise yacc.YaccError(f"Function {p[-1]} already declared")
 
 def p_class(p):
     '''
@@ -265,7 +287,7 @@ def p_arr_init4(p):
 
 def p_compound_type(p):
     '''
-    compound_type : ID 
+    compound_type : ID
     '''
     p[0] = ('compound_type',p[1])
 
@@ -278,28 +300,31 @@ def p_simple_type(p):
     '''
     curr.setCurrType(p[1])
     
-    p[0]=('simple_type',p[1]) 
+    p[0]=p[1]
 
 def p_assignment(p):
     '''
-    assignment : assignmentp EQUALS expression SEMIC
+    assignment : ID EQUALS expression SEMIC
     '''
+    # Verify id exists in current scope or global scope
+    if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
+        raise yacc.YaccError(f"Variable {p[1]} is not declared")
+    
     p[0] = ('assignment',p[1],p[2],p[3],p[4] )
-
-def p_assignmentp(p):
-    '''
-    assignmentp : ID
-        | empty
-    '''
-    p[0] = ('assignment',p[1])
 
 def p_parameter(p):
     '''
     parameter : simple_type ID parameter2
     '''
+    # Add parameters' type to temp params that do not belong to any function yet
+    curr.addParams(p[1])
 
-    # Add var name and type to a temp var_table that does not belong to any function yet
-    curr.setVars(p[2], p[1][1])
+    # Add var and check if variable is not already declared within function or globally
+    if (functionTable.get_var_type_in_function('main', p[2])):
+        raise yacc.YaccError(f"Variable {p[2]} already declared globally")
+    
+    if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1]) is None):
+        raise yacc.YaccError(f"Variable {p[2]} already declared")
     
     p[0] = ('parameter',p[1],p[2],p[3])
 
@@ -315,15 +340,23 @@ def p_parameter2(p):
 
 def p_var_cte(p):
     '''
-    var_cte : CTE_INT 
-       | CTE_FLOAT
-       | CTE_CHAR
+    var_cte : CTE_INT add_constant_int
+       | CTE_FLOAT add_constant_float
+       | CTE_CHAR add_constant_char
     '''
-    p[0] = ('var_cte',p[1] )
-    #TODO call addconstant
-    
+    p[0] = p[1]
 
+def p_add_constant_int(p):
+    "add_constant_int :"
+    constantsTable.add_var(p[-1], 'int')
 
+def p_add_constant_float(p):
+    "add_constant_float :"
+    constantsTable.add_var(p[-1], 'float')
+
+def p_add_constant_char(p):
+    "add_constant_char :"
+    constantsTable.add_var(p[-1], 'char')
 
 def p_expression(p):
     '''
@@ -333,7 +366,7 @@ def p_expression(p):
 
 def p_expression2(p):
     '''
-    expression2 : expression3 exp
+    expression2 : expression3 push_operator exp check_for_relational_op
        | empty
     '''
     if (len(p) == 3):
@@ -348,18 +381,77 @@ def p_expression3(p):
        | NOTEQ
        | EQEQ
     '''
-    p[0] = ('expression3',p[1])
+    p[0] = p[1]
 
 def p_exp(p):
     '''
-    exp : term exp2
+    exp : term check_for_sum_rest exp2
     '''
     p[0] = ('exp',p[1],p[2])
 
+def p_check_for_relational_op(p):
+    "check_for_relational_op :"
+    # Check that fake bottom (-1) does not exist
+    if (len(quadruples.stack_operators) > 0 and quadruples.stack_operators[-1] != '-1'):
+        # If i have a relational operator pending
+        if (quadruples.stack_operators[-1] == '<' or quadruples.stack_operators[-1] == '>'
+            or quadruples.stack_operators[-1] == '<>' or quadruples.stack_operators[-1] == '=='):
+
+            right_operand = quadruples.stack_operands.pop()
+            right_type = quadruples.stack_types.pop()
+
+            left_operand = quadruples.stack_operands.pop()
+            left_type = quadruples.stack_types.pop()
+
+            operator = quadruples.stack_operators.pop()
+
+            result_type = semanticCube.get_result_type(operator, left_type, right_type)
+
+            if (result_type is None):
+                raise yacc.YaccError(f"Type mismatch!")
+            else:
+                # Generate quad
+                temporal = 't' + str(quadruples.get_temporal_counter())
+                quad = [operator, left_operand, right_operand, temporal]
+                quadruples.quadruples.append(quad)
+
+                quadruples.stack_operands.append(temporal)
+                quadruples.stack_types.append(result_type)
+                quadruples.increment_counter()
+
+def p_check_for_sum_rest(p):
+    "check_for_sum_rest :"
+    # Check that fake bottom (-1) does not exist
+    if (len(quadruples.stack_operators) > 0 and quadruples.stack_operators[-1] != '-1'):
+        # If i have a sum or substraction pending
+        if ((quadruples.stack_operators[-1] == '+' or quadruples.stack_operators[-1] == '-')):
+
+            right_operand = quadruples.stack_operands.pop()
+            right_type = quadruples.stack_types.pop()
+
+            left_operand = quadruples.stack_operands.pop()
+            left_type = quadruples.stack_types.pop()
+
+            operator = quadruples.stack_operators.pop()
+
+            result_type = semanticCube.get_result_type(operator, left_type, right_type)
+
+            if (result_type is None):
+                raise yacc.YaccError(f"Type mismatch!")
+            else:
+                # Generate quad
+                temporal = 't' + str(quadruples.get_temporal_counter())
+                quad = [operator, left_operand, right_operand, temporal]
+                quadruples.quadruples.append(quad)
+
+                quadruples.stack_operands.append(temporal)
+                quadruples.stack_types.append(result_type)
+                quadruples.increment_counter()
+
 def p_exp2(p):
     '''
-    exp2 : PLUS exp
-       | MINUS exp
+    exp2 : PLUS push_operator exp
+       | MINUS push_operator exp
        | empty
     '''
     if (len(p) == 3):
@@ -369,14 +461,43 @@ def p_exp2(p):
 
 def p_term(p):
     '''
-    term : factor term2
+    term : factor check_for_mult_div term2
     '''
     p[0] = ('term',p[1],p[2])
 
+def p_check_for_mult_div(p):
+    "check_for_mult_div :"
+    # Check that fake bottom (-1) does not exist
+    if (len(quadruples.stack_operators) > 0 and quadruples.stack_operators[-1] != '-1'):
+        # If i have a multiplication or division pending
+        if ((quadruples.stack_operators[-1] == '*' or quadruples.stack_operators[-1] == '/')):
+
+            right_operand = quadruples.stack_operands.pop()
+            right_type = quadruples.stack_types.pop()
+
+            left_operand = quadruples.stack_operands.pop()
+            left_type = quadruples.stack_types.pop()
+
+            operator = quadruples.stack_operators.pop()
+
+            result_type = semanticCube.get_result_type(operator, left_type, right_type)
+
+            if (result_type is None):
+                raise yacc.YaccError(f"Type mismatch!")
+            else:
+                # Generate quad
+                temporal = 't' + str(quadruples.get_temporal_counter())
+                quad = [operator, left_operand, right_operand, temporal]
+                quadruples.quadruples.append(quad)
+
+                quadruples.stack_operands.append(temporal)
+                quadruples.stack_types.append(result_type)
+                quadruples.increment_counter()
+
 def p_term2(p):
     '''
-    term2 : TIMES term
-       | DIVIDE term
+    term2 : TIMES push_operator term
+       | DIVIDE push_operator term
        | empty
     '''
     if (len(p) == 3):
@@ -384,11 +505,15 @@ def p_term2(p):
     else:
         p[0] = p[1] 
 
+def p_push_operator(p):
+    "push_operator :"
+    quadruples.stack_operators.append(p[-1])
+
 def p_factor(p):
     '''
-    factor : LPAREN expression RPAREN
-           | factor2
-           | variable
+    factor : LPAREN add_fake_bottom expression RPAREN remove_fake_bottom
+           | factor2 push_cte_operand
+           | variable push_operand
            | call
     '''
     if (len(p) == 4):
@@ -396,11 +521,19 @@ def p_factor(p):
     else:
         p[0] = ('factor',p[1])
 
+def p_add_fake_bottom(p):
+    "add_fake_bottom :"
+    quadruples.stack_operators.append('-1')
+
+def p_remove_fake_bottom(p):
+    "remove_fake_bottom :"
+    quadruples.stack_operators.pop()
+
 def p_factor2(p):
     '''
     factor2 : factor3 var_cte
     '''
-    p[0] = ('factor2',p[1],p[2]) 
+    p[0] = p[2]
 
 def p_factor3(p):
     '''
@@ -409,6 +542,22 @@ def p_factor3(p):
        | empty
     '''
     p[0] = p[1]
+
+def p_push_cte_operand(p):
+    "push_cte_operand :"
+    # Push constant operand (id and type)
+    quadruples.stack_operands.append(p[-1])
+
+    type = constantsTable.get_var_type(p[-1])
+    quadruples.stack_types.append(type)
+
+def p_push_operand(p):
+    "push_operand :"
+    # Push operand (id and type)
+    quadruples.stack_operands.append(p[-1])
+
+    type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+    quadruples.stack_types.append(type)
 
 def p_variable(p):
     '''
@@ -443,10 +592,17 @@ def p_variable3(p):
 
 def p_call(p):
     '''
-    call : ID call2
+    call : ID verify_function_exists call2
        | ID call3
     '''
     p[0] = ('call',p[1],p[2] )
+
+def p_verify_function_exists(p):
+    "verify_function_exists :"
+
+    # Verify that function exists in function table
+    if (functionTable.get_function(p[-1]) is None):
+        raise yacc.YaccError(f"Function {p[-1]} not declared")
 
 def p_call2(p):
     '''
@@ -537,6 +693,10 @@ def p_return(p):
     return : RETURN ID
           | RETURN expression
     '''
+    # Verify id exists in current scope or global scope
+    if ((functionTable.get_var_type_in_function(curr.getScope(), p[2]) is None) and (functionTable.get_var_type_in_function('main', p[2]) is None)):
+        raise yacc.YaccError(f"Variable {p[2]} is not declared")
+
     p[0] = ('return',p[1],p[2])
 
 def p_loop(p):
@@ -579,8 +739,9 @@ def p_empty(p):
 
 
 def p_error(p):
-    print(f'Syntax error in {p.value}')
-    raise SyntaxError
+    if p:
+        print(f'Syntax error in {p.value}')
+    raise SyntaxError('Syntax Error')
 
 # Build the parser
 parser = yacc.yacc()
