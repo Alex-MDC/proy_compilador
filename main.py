@@ -7,7 +7,7 @@
 # TODO: update when needed
 #  <program>  : dv df dc MAIN block 
 #
-#  <dv>       : dec_vars
+#  <dv>       : dec_vars dv
 #             | empty
 #
 #  <df>       : function df
@@ -46,12 +46,9 @@
 #                   | empty
 # 
 #  <dec_vars6>      : [ CTE_INT ] dec_vars7
-#                   | [ CTE_INT ] arr_init
-#                   | assignment
 #                   | empty
 #
-#  <dec_vars7>      : [ CTE_Int ]
-#                   | [ CTE_Int ] arr_init
+#  <dec_vars7>      : [ CTE_INT ]
 #                   | empty
 #
 #  <dec_vars3>      : compound_type ID dec_vars8
@@ -78,18 +75,6 @@
 #                  | empty
 # ------------------------------
 #
-#  <arr_init>      : = { arr_init2 }
-#
-#  <arr_init2>     : var_cte arr_init3
-#                  | { var_cte arr_init3 } arr_init4
-#
-#  <arr_init3>     : , var_cte arr_init3
-#                  | empty
-#
-#  <arr_init4>     : , { var_cte arr_init3 } arr_init4
-#                  | empty
-# ------------------------------
-#
 #  <compund_type> : id      
 # ------------------------------
 #
@@ -99,9 +84,7 @@
 #                 | BOOL
 # ------------------------------
 #
-#  <assignment>   : assignmentp = expression ;
-#  <assignmentp>  : id
-#                 | empty
+#  <assignment>   : id = expression ;
 # ------------------------------
 #
 #  <parameter>     : simple_type ID parameter2
