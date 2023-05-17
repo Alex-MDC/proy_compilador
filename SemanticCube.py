@@ -11,7 +11,9 @@ class SemanticCube:
             '>=': 'greater_than_or_equal_to',
             '<=': 'less_than_or_equal_to',
             '==': 'equal_to',
-            '<>': 'not_equal_to'
+            '<>': 'not_equal_to',
+            '&&': 'and',
+            '||': 'or'
         }
 
         # Define data types for semantic cube
@@ -56,12 +58,10 @@ class SemanticCube:
         
         self.cube['==']['char']['char'] = 'bool'
         self.cube['<>']['char']['char'] = 'bool'
-        self.cube['==']['bool']['bool'] = 'bool'
-        self.cube['<>']['bool']['bool'] = 'bool'
 
         # Set semantic rules for logical operations
-        # for op in ['&&', '||']:
-        #     self.cube[op]['bool']['bool'] = 'bool'
+        for op in ['&&', '||', '==', '<>']:
+            self.cube[op]['bool']['bool'] = 'bool'
 
     # If None is returned, an error occured
     def get_result_type(self, operator, operand1_type, operand2_type):

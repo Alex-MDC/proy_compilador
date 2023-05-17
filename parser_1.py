@@ -265,7 +265,7 @@ def p_simple_type(p):
 
 def p_assignment(p):
     '''
-    assignment : ID EQUALS expression SEMIC
+    assignment : ID EQUALS super_expression SEMIC
     '''
     # Verify id exists in current scope or global scope
     if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
@@ -301,17 +301,16 @@ def p_parameter2(p):
 
 def p_var_cte(p):
     '''
-    var_cte : PLUS  CTE_INT add_constant_int
-       | PLUS  CTE_FLOAT add_constant_float
-       | MINUS  CTE_INT add_neg_constant_int
-       | MINUS  CTE_FLOAT add_neg_constant_float
+    var_cte : PLUS CTE_INT add_constant_int
+       | PLUS CTE_FLOAT add_constant_float
+       | MINUS CTE_INT add_neg_constant_int
+       | MINUS CTE_FLOAT add_neg_constant_float
        | CTE_INT add_constant_int
        | CTE_FLOAT add_constant_float
        | CTE_CHAR add_constant_char
     '''
     if (len(p) == 3):
         p[0] = p[1] 
-
 
 def p_add_constant_int(p):
     "add_constant_int :"
@@ -342,6 +341,29 @@ def p_add_neg_constant_float(p):
 def p_add_constant_char(p):
     "add_constant_char :"
     constantsTable.add_var(p[-1], 'char')
+
+def p_super_expression(p):
+    '''
+    super_expression : expression super_expression2
+    '''
+    p[0] = ('super_expression',p[1],p[2])
+
+def p_super_expression2(p):
+    '''
+    super_expression2 : super_expression3 expression
+       | empty
+    '''
+    if (len(p) == 3):
+     p[0] = ('super_expression2',p[1],p[2])
+    else:
+        p[0] = p[1] 
+
+def p_super_expression3(p):
+    '''
+    super_expression3 : AND
+       | OR
+    '''
+    p[0] = p[1]
 
 def p_expression(p):
     '''
@@ -644,7 +666,7 @@ def p_call8(p):
 
 def p_condition(p):
     '''
-    condition : IF LPAREN expression RPAREN block condition2
+    condition : IF LPAREN super_expression RPAREN block condition2
     '''
     p[0] = ('condition',p[1],p[2],p[3],p[4],p[5],p[6])
 
@@ -660,14 +682,14 @@ def p_condition2(p):
 
 def p_writing(p):
     '''
-    writing : PRINT LPAREN expression RPAREN SEMIC
+    writing : PRINT LPAREN super_expression RPAREN SEMIC
     '''
     p[0] = ('writing',p[1],p[2],p[3],p[4],p[5])
 
 def p_return(p):
     '''
     return : RETURN ID
-          | RETURN expression
+          | RETURN super_expression
     '''
     # Verify id exists in current scope or global scope
     if ((functionTable.get_var_type_in_function(curr.getScope(), p[2]) is None) and (functionTable.get_var_type_in_function('main', p[2]) is None)):
@@ -677,9 +699,9 @@ def p_return(p):
 
 def p_loop(p):
     '''
-    loop : FOR ID EQUALS exp TO exp DO statement SEMIC
+    loop : WHILE LPAREN super_expression RPAREN block
     '''
-    p[0] = ('loop',p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9])
+    p[0] = ('loop',p[1],p[2],p[3],p[4],p[5])
 
 def p_input(p):
     '''
