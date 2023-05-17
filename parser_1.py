@@ -270,7 +270,25 @@ def p_assignment(p):
     # Verify id exists in current scope or global scope
     if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
         raise yacc.YaccError(f"Variable {p[1]} is not declared")
-    
+    elif (functionTable.get_var_type_in_function(curr.getScope(), p[1]) != None):
+        #save type
+        type = functionTable.get_var_type_in_function(curr.getScope(), p[1])
+    elif(functionTable.get_var_type_in_function('main', p[1]) != None):
+        type = functionTable.get_var_type_in_function('main', p[1])
+
+    #generate quad
+    operator = p[2]
+    assignee_operand = p[1]
+    left_operand = quadruples.stack_operands.pop()
+    #verify types are same
+    if(type == quadruples.stack_types.pop()):
+        quad = [operator, left_operand,assignee_operand]
+        #by now, these two pops have erased the latest remaining operand and type
+        quadruples.quadruples.append(quad)
+        quadruples.increment_counter()
+    else:
+        raise yacc.YaccError(f"Type mismatch on assignment!")
+
     p[0] = ('assignment',p[1],p[2],p[3],p[4] )
 
 def p_parameter(p):
