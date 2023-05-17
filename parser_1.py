@@ -146,8 +146,6 @@ def p_dec_vars5(p):
 def p_dec_vars6(p):
     '''
     dec_vars6 : LBRACKET CTE_INT RBRACKET dec_vars7
-        | LBRACKET CTE_INT RBRACKET arr_init
-        | assignment
         | empty
     '''
     if (len(p) == 5):
@@ -157,8 +155,7 @@ def p_dec_vars6(p):
 
 def p_dec_vars7(p):
     '''
-    dec_vars7 : LBRACKET CTE_INT RBRACKET 
-        | LBRACKET CTE_INT RBRACKET arr_init
+    dec_vars7 : LBRACKET CTE_INT RBRACKET
         | empty
     '''
     if (len(p) == 5):
@@ -248,42 +245,6 @@ def p_class3(p):
      p[0] = ('class3',p[1],p[2])
     else:
         p[0] = p[1] 
-
-def p_arr_init(p):
-    '''
-    arr_init : EQUALS LCURL arr_init2 RCURL
-    '''
-    p[0] = ('arr_init',p[1],p[2],p[3],p[4])
-
-def p_arr_init2(p):
-    '''
-    arr_init2 : var_cte arr_init3
-              | LCURL var_cte arr_init3 RCURL arr_init4
-    '''
-    if (len(p) == 3):
-        p[0] = ('arr_init2',p[1],p[2])
-    else:
-        p[0] = ('arr_init2',p[1],p[2],p[3],p[4],p[5])
-
-def p_arr_init3(p):
-    '''
-    arr_init3 : COMMA var_cte arr_init3
-              | empty
-    '''
-    if (len(p) == 4):
-        p[0] = ('arr_init3',p[1],p[2],p[3])
-    else:
-        p[0] = ('arr_init3',p[1])
-
-def p_arr_init4(p):
-    '''
-    arr_init4   : COMMA LCURL var_cte arr_init3 RCURL arr_init4
-                | empty
-    '''
-    if (len(p) == 7):
-        p[0] = ('arr_init4',p[1],p[2],p[3],p[4],p[5],p[6])
-    else:
-        p[0] = ('arr_init4',p[1])
 
 def p_compound_type(p):
     '''
