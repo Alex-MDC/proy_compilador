@@ -517,10 +517,23 @@ def p_remove_fake_bottom(p):
 def p_push_operand(p):
     "push_operand :"
     # Push operand (id and type)
-    quadruples.stack_operands.append(p[-1])
+    # quadruples.stack_operands.append(p[-1])
 
-    type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
-    quadruples.stack_types.append(type)
+    # type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+    # quadruples.stack_types.append(type)
+    #
+    # TODO check var is declared locally to push it, if not, check global. if not either, error undeclared var
+    if(functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
+        quadruples.stack_operands.append(p[-1])
+        type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+        quadruples.stack_types.append(type)
+    elif (functionTable.get_var_type_in_function('main', p[-1]) != None):
+        quadruples.stack_operands.append(p[-1])
+        type = functionTable.get_var_type_in_function('main', p[-1])
+        quadruples.stack_types.append(type)
+    else :
+        raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
+
 
 def p_variable(p):
     '''
