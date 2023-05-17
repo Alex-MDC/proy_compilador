@@ -137,7 +137,7 @@
 #             |  empty
 # ------------------------------
 #
-#  <factor>    : ( expression )
+#  <factor>    : ( super_expression )
 #              | var_cte
 #              | variable
 #              | call
@@ -212,7 +212,6 @@ reserved = {
     'else' : 'ELSE',
     'print' : 'PRINT',
     'var' : 'VAR',
-    'for' : 'FOR',
     "input": "INPUT",
     "void": "VOID", # TODO: Check if this is valid. Also check null
     "class": "CLASS",
@@ -222,12 +221,10 @@ reserved = {
     "char": "CHAR",
     "bool": "BOOL",
     "return": "RETURN",
-    "to" : "TO",
-    "do" : "DO",
     "True": "TRUE",
     "False": "FALSE",
-    "&&": "AND",
-    "||": "OR",
+    "and": "AND",
+    "or": "OR",
     "while": "WHILE"
 }
 
@@ -330,7 +327,7 @@ lexer = lex()
 # Test it out
 data = f'''
 False True
-main {{ if True 4 >= <=}}
+main {{ if True 4 and or}}
 '''
 
 # Give the lexer some input
