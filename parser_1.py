@@ -301,19 +301,43 @@ def p_parameter2(p):
 
 def p_var_cte(p):
     '''
-    var_cte : CTE_INT add_constant_int
+    var_cte : PLUS  CTE_INT add_constant_int
+       | PLUS  CTE_FLOAT add_constant_float
+       | MINUS  CTE_INT add_neg_constant_int
+       | MINUS  CTE_FLOAT add_neg_constant_float
+       | CTE_INT add_constant_int
        | CTE_FLOAT add_constant_float
        | CTE_CHAR add_constant_char
     '''
-    p[0] = p[1]
+    if (len(p) == 3):
+        p[0] = p[1] 
+
 
 def p_add_constant_int(p):
     "add_constant_int :"
     constantsTable.add_var(p[-1], 'int')
+    quadruples.stack_operands.append(p[-1])
+    quadruples.stack_types.append('int')
 
 def p_add_constant_float(p):
     "add_constant_float :"
     constantsTable.add_var(p[-1], 'float')
+    quadruples.stack_operands.append(p[-1])
+    quadruples.stack_types.append('float')
+
+def p_add_neg_constant_int(p):
+    "add_neg_constant_int :"
+    constantsTable.add_var(str(int(p[-1])*-1), 'int')
+    quadruples.stack_operands.append(str(int(p[-1])*-1))
+    quadruples.stack_types.append('int')
+    p[0] = str(int(p[-1])*-1)
+
+def p_add_neg_constant_float(p):
+    "add_neg_constant_float :"
+    constantsTable.add_var(str(float(p[-1])*-1), 'float')
+    quadruples.stack_operands.append(str(float(p[-1])*-1))
+    quadruples.stack_types.append('float')
+    p[0] = str(float(p[-1])*-1)
 
 def p_add_constant_char(p):
     "add_constant_char :"
@@ -473,7 +497,7 @@ def p_push_operator(p):
 def p_factor(p):
     '''
     factor : LPAREN add_fake_bottom expression RPAREN remove_fake_bottom
-           | factor2 push_cte_operand
+           | var_cte 
            | variable push_operand
            | call
     '''
@@ -489,28 +513,6 @@ def p_add_fake_bottom(p):
 def p_remove_fake_bottom(p):
     "remove_fake_bottom :"
     quadruples.stack_operators.pop()
-
-def p_factor2(p):
-    '''
-    factor2 : factor3 var_cte
-    '''
-    p[0] = p[2]
-
-def p_factor3(p):
-    '''
-    factor3 : PLUS
-       | MINUS
-       | empty
-    '''
-    p[0] = p[1]
-
-def p_push_cte_operand(p):
-    "push_cte_operand :"
-    # Push constant operand (id and type)
-    quadruples.stack_operands.append(p[-1])
-
-    type = constantsTable.get_var_type(p[-1])
-    quadruples.stack_types.append(type)
 
 def p_push_operand(p):
     "push_operand :"

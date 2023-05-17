@@ -93,7 +93,11 @@
 #                  | empty
 # ------------------------------
 # 
-#  <var_cte>   : CTE_INT  
+#  <var_cte>   : + CTE_INT  
+#              | + CTE_FLOAT
+#              | - CTE_INT
+#              | - CTE_FLOAT
+#              | CTE_INT
 #              | CTE_FLOAT
 #              | CTE_CHAR
 # ------------------------------
@@ -124,15 +128,10 @@
 # ------------------------------
 #
 #  <factor>    : ( expression )
-#              | factor2
+#              | var_cte
 #              | variable
 #              | call
-#   
-#  <factor2>   : factor3 var_cte 
-#         
-#  <factor3>   : +
-#              | - 
-#              | empty 
+#
 # ------------------------------
 #
 #  <variable>   : ID variable2
