@@ -356,15 +356,13 @@ def p_add_constant_int(p):
     "add_constant_int :"
     constantsTable.add_var(p[-1], 'int')
     quadruples.stack_operands.append(p[-1])
-    type = constantsTable.get_var_type(p[-1])
-    quadruples.stack_types.append(type)
+    quadruples.stack_types.append('int')
 
 def p_add_constant_float(p):
     "add_constant_float :"
     constantsTable.add_var(p[-1], 'float')
     quadruples.stack_operands.append(p[-1])
-    type = constantsTable.get_var_type(p[-1])
-    quadruples.stack_types.append(type)
+    quadruples.stack_types.append('float')
 
 def p_add_neg_constant_int(p):
     "add_neg_constant_int :"
