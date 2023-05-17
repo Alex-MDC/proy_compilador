@@ -84,7 +84,7 @@
 #                 | BOOL
 # ------------------------------
 #
-#  <assignment>   : id = expression ;
+#  <assignment>   : id = super_expression ;
 # ------------------------------
 #
 #  <parameter>     : simple_type ID parameter2
@@ -100,6 +100,16 @@
 #              | CTE_INT
 #              | CTE_FLOAT
 #              | CTE_CHAR
+#
+# ------------------------------
+# 
+#  <super_expression>     : expression super_expression2
+# 
+#  <super_expression2>    : super_expression3 expression  
+#                         | empty
+#
+#  <super_expression3>    : &&
+#                         | ||
 # ------------------------------
 # 
 #  <expression>     : exp expression2
@@ -166,20 +176,20 @@
 #               | empty
 # ------------------------------
 #
-#  <condition>  : IF ( expression ) block condition2 
+#  <condition>  : IF ( super_expression ) block condition2 
 # 
 #  <condition2> :  ELSE block 
 #               | empty
 # ------------------------------
 #
-#  <writing>    : print ( expression ) ;
+#  <writing>    : print ( super_expression ) ;
 # ------------------------------
 #
 #  <return>        : RETURN id
-#                  | RETURN expression
+#                  | RETURN super_expression
 # ------------------------------
 #
-#  <loop>          : FOR ID = exp TO exp DO statement ;
+#  <loop>          : while ( super_expression ) block
 # ------------------------------
 #
 #  <input>     : ID = INPUT ( variable ) ;
@@ -214,6 +224,11 @@ reserved = {
     "return": "RETURN",
     "to" : "TO",
     "do" : "DO",
+    "True": "TRUE",
+    "False": "FALSE",
+    "&&": "AND",
+    "||": "OR",
+    "while": "WHILE"
 }
 
 # All tokens must be named in advance.
@@ -239,7 +254,6 @@ tokens = [
     'CTE_INT', 
     'CTE_FLOAT', 
     'CTE_CHAR',
-    'CTE_BOOL',
     
     'EQUALS',
     'EQEQ',
@@ -283,7 +297,6 @@ t_RBRACKET  = r'\]'
 t_CTE_INT       = r'\d+'
 t_CTE_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
 t_CTE_CHAR      = r'"[^"]"'
-t_CTE_BOOL      = r'\b(True|False)\b'
 
 t_EQUALS    = r'='
 t_GT        = r'>'
