@@ -370,7 +370,6 @@ def p_add_constant_float(p):
 def p_add_neg_constant_int(p):
     "add_neg_constant_int :"
     constantsTable.add_var(str(int(p[-1])*-1), 'int')
-   # print(constantsTable.vars)
     quadruples.stack_operands.append(str(int(p[-1])*-1))
     quadruples.stack_types.append('int')
 
