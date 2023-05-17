@@ -350,8 +350,7 @@ def p_var_cte(p):
     '''
     if (len(p) == 3):
         p[0] = p[1] 
-    else:
-        p[0] = p[2] 
+
 
 def p_add_constant_int(p):
     "add_constant_int :"
@@ -372,12 +371,14 @@ def p_add_neg_constant_int(p):
     constantsTable.add_var(str(int(p[-1])*-1), 'int')
     quadruples.stack_operands.append(str(int(p[-1])*-1))
     quadruples.stack_types.append('int')
+    p[0] = str(int(p[-1])*-1)
 
 def p_add_neg_constant_float(p):
     "add_neg_constant_float :"
     constantsTable.add_var(str(float(p[-1])*-1), 'float')
     quadruples.stack_operands.append(str(float(p[-1])*-1))
     quadruples.stack_types.append('float')
+    p[0] = str(float(p[-1])*-1)
 
 def p_add_constant_char(p):
     "add_constant_char :"
