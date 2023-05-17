@@ -350,7 +350,7 @@ def p_super_expression(p):
 
 def p_super_expression2(p):
     '''
-    super_expression2 : super_expression3 expression
+    super_expression2 : super_expression3 push_operator expression check_for_boolean_op
        | empty
     '''
     if (len(p) == 3):
@@ -364,6 +364,34 @@ def p_super_expression3(p):
        | OR
     '''
     p[0] = p[1]
+
+def p_check_for_boolean_op(p):
+    "check_for_boolean_op :"
+    # Check that fake bottom (-1) does not exist
+    if (len(quadruples.stack_operators) > 0 and quadruples.stack_operators[-1] != '-1'):
+        # If i have a boolean operator pending
+        if (quadruples.stack_operators[-1] == 'and' or quadruples.stack_operators[-1] == 'or'):
+            right_operand = quadruples.stack_operands.pop()
+            right_type = quadruples.stack_types.pop()
+
+            left_operand = quadruples.stack_operands.pop()
+            left_type = quadruples.stack_types.pop()
+
+            operator = quadruples.stack_operators.pop()
+
+            result_type = semanticCube.get_result_type(operator, left_type, right_type)
+
+            if (result_type is None):
+                raise yacc.YaccError(f"Type mismatch!")
+            else:
+                # Generate quad
+                temporal = 't' + str(quadruples.get_temporal_counter())
+                quad = [operator, left_operand, right_operand, temporal]
+                quadruples.quadruples.append(quad)
+
+                quadruples.stack_operands.append(temporal)
+                quadruples.stack_types.append(result_type)
+                quadruples.increment_counter()
 
 def p_expression(p):
     '''
@@ -518,7 +546,7 @@ def p_push_operator(p):
 
 def p_factor(p):
     '''
-    factor : LPAREN add_fake_bottom expression RPAREN remove_fake_bottom
+    factor : LPAREN add_fake_bottom super_expression RPAREN remove_fake_bottom
            | var_cte 
            | variable push_operand
            | call

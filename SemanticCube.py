@@ -12,8 +12,8 @@ class SemanticCube:
             '<=': 'less_than_or_equal_to',
             '==': 'equal_to',
             '<>': 'not_equal_to',
-            '&&': 'and',
-            '||': 'or'
+            'and': 'and',
+            'or': 'or'
         }
 
         # Define data types for semantic cube
@@ -60,7 +60,7 @@ class SemanticCube:
         self.cube['<>']['char']['char'] = 'bool'
 
         # Set semantic rules for logical operations
-        for op in ['&&', '||', '==', '<>']:
+        for op in ['and', 'or', '==', '<>']:
             self.cube[op]['bool']['bool'] = 'bool'
 
     # If None is returned, an error occured
