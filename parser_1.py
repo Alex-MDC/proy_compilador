@@ -608,7 +608,19 @@ def p_variable(p):
     variable : ID variable2
     '''
     p[0] = p[1]
-    #   TODO verify ID exists in current function
+    # Verify id exists in current scope or global scope
+    if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
+        raise yacc.YaccError(f"Variable {p[1]} is not declared")
+    elif (functionTable.get_var_type_in_function(curr.getScope(), p[1]) != None):
+        #save type
+        type = functionTable.get_var_type_in_function(curr.getScope(), p[1])
+    elif(functionTable.get_var_type_in_function('main', p[1]) != None):
+        type = functionTable.get_var_type_in_function('main', p[1])
+    
+    quadruples.stack_types.append(type)
+    quadruples.stack_operands.append(p[1])
+
+
     # p[0] = ('variable',p[1], p[2])
     
 
@@ -751,9 +763,19 @@ def p_loop(p):
 
 def p_input(p):
     '''
-    input : ID EQUALS INPUT LPAREN variable RPAREN SEMIC
+    input : INPUT LPAREN variable RPAREN SEMIC
     '''
-    p[0] = ('input',p[1],p[2],p[3],p[4],p[5],p[6],p[7]) 
+    # dynamic semantic on variable
+    #generate quad
+    instruction = p[1]
+    #input_var = p[3]
+    input_var = quadruples.stack_operands.pop()
+    input_type = quadruples.stack_types.pop()
+    quad = [instruction, input_var, ' ',' ']
+    quadruples.quadruples.append(quad)
+    quadruples.increment_counter()
+
+    p[0] = ('input',p[1],p[2],p[3],p[4],p[5]) 
 
 def p_arr_assign(p):
     '''
