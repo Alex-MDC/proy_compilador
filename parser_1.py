@@ -276,16 +276,15 @@ def p_assignment(p):
     elif(functionTable.get_var_type_in_function('main', p[1]) != None):
         type = functionTable.get_var_type_in_function('main', p[1])
 
-    #generate quad
+    # Generate quad
     operator = p[2]
     assignee_operand = p[1]
     left_operand = quadruples.stack_operands.pop()
-    #verify types are same
+    # Verify types are same
     if(type == quadruples.stack_types.pop()):
-        quad = [operator, left_operand,assignee_operand]
-        #by now, these two pops have erased the latest remaining operand and type
+        quad = [operator, left_operand, '', assignee_operand]
+        # By now, these two pops have erased the latest remaining operand and type
         quadruples.quadruples.append(quad)
-        quadruples.increment_counter()
     else:
         raise yacc.YaccError(f"Type mismatch on assignment!")
 
@@ -728,9 +727,40 @@ def p_condition2(p):
 
 def p_writing(p):
     '''
-    writing : PRINT LPAREN super_expression RPAREN SEMIC
+    writing : PRINT LPAREN writing2 RPAREN SEMIC
     '''
     p[0] = ('writing',p[1],p[2],p[3],p[4],p[5])
+
+def p_writing2(p):
+    '''
+    writing2 : CTE_STR push_str_operand generate_quad writing3
+            | super_expression generate_quad writing3
+    '''
+    p[0] = ('writing2',p[1])
+
+def p_writing3(p):
+    '''
+    writing3 : COMMA writing2
+            | empty
+    '''
+    p[0] = ('writing3',p[1])
+
+def p_push_str_operand(p):
+    "push_str_operand :"
+
+    # Push str operand (id and type)
+    quadruples.stack_operands.append(p[-1])
+    quadruples.stack_types.append("string")
+
+def p_generate_quad(p):
+    "generate_quad :"
+
+    # Generate quadruple
+    result = quadruples.stack_operands.pop()
+    quad = ['print', '', '', result]
+    quadruples.quadruples.append(quad)
+
+    quadruples.stack_types.pop()
 
 def p_return(p):
     '''
