@@ -198,7 +198,7 @@
 #  <loop>          : while ( super_expression ) block
 # ------------------------------
 #
-#  <input>     : ID = INPUT ( variable ) ;
+#  <input>     : INPUT ( variable ) ;
 # ------------------------------
 #  <arr_assign>    : ID arr_assign1 = expression ;
 # 
