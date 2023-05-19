@@ -4,3 +4,5 @@ program id; { if(a > b) {id = ctef; }; }
 program id ; { print(); }
 program id ; { if(4>5) {id = 22.3}; }
 prog ñ
+var int a,b,c,d main {while(a>b*c) {a=a-d; print(a);} b=c+a;  }
+var int a,b,c,d main {a=b+c;  while(a>b*c) {a=b-c; b=b+d;} c=a+b;  }   
