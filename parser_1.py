@@ -712,19 +712,53 @@ def p_call8(p):
 
 def p_condition(p):
     '''
-    condition : IF LPAREN super_expression RPAREN block condition2
+    condition : IF LPAREN super_expression RPAREN add_gotof block condition2 solve_pending_jump
     '''
     p[0] = ('condition',p[1],p[2],p[3],p[4],p[5],p[6])
 
 def p_condition2(p):
     '''
-    condition2 : ELSE block
+    condition2 : ELSE add_goto block
        | empty
     '''
     if (len(p) == 3):
      p[0] = ('condition2',p[1],p[2])
     else:
         p[0] = p[1] 
+
+def p_add_gotof(p):
+    "add_gotof :"
+    expr_type = quadruples.stack_types.pop()
+    expression = quadruples.stack_operands.pop()
+
+    if expr_type is not 'bool':
+        raise yacc.YaccError(f"If requires a boolean expression!")
+    else:
+        # Generate quadruple
+        quad = ['GOTOF', expression, '', '']
+        quadruples.quadruples.append(quad)
+        quadruples.stack_jumps.append(len(quadruples.quadruples) - 1)
+
+def p_add_goto(p):
+    "add_goto :"
+    pending_jump = quadruples.stack_jumps.pop()
+
+    # Generate quadruple
+    quad = ['GOTO', '', '', '']
+    quadruples.quadruples.append(quad)
+
+    # I do not know where that GOTO needs to go, so in the mean time push it to jump' stack
+    quadruples.stack_jumps.append(len(quadruples.quadruples) - 1)
+
+    # Solve pending jump
+    quadruples.quadruples[pending_jump][3] = len(quadruples.quadruples)
+
+def p_solve_pending_jump(p):
+    "solve_pending_jump :"
+    pending_jump = quadruples.stack_jumps.pop()
+
+    # Solve pending jump
+    quadruples.quadruples[pending_jump][3] = len(quadruples.quadruples)
 
 def p_writing(p):
     '''
