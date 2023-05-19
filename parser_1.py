@@ -808,12 +808,42 @@ def p_return(p):
 
     p[0] = ('return',p[1],p[2])
 
+#-----loop
 def p_loop(p):
     '''
-    loop : WHILE LPAREN super_expression RPAREN block
+    loop : WHILE while_breadcrumb LPAREN super_expression RPAREN while_gotof block while_pending_jump
     '''
     p[0] = ('loop',p[1],p[2],p[3],p[4],p[5])
 
+def p_while_breadcrumb(p):
+    "while_breadcrumb :"
+    quadruples.stack_jumps.append(len(quadruples.quadruples))
+
+def p_while_gotof(p):
+    "while_gotof :"
+    expr_type = quadruples.stack_types.pop()
+    expression = quadruples.stack_operands.pop()
+
+    if expr_type is not 'bool':
+        raise yacc.YaccError(f"While requires a boolean expression!")
+    else:
+        # Generate quadruple
+        quad = ['GOTOF', expression, '', '']
+        quadruples.quadruples.append(quad)
+        #breadcrunb to fill gotoF later
+        quadruples.stack_jumps.append(len(quadruples.quadruples) - 1)
+
+def p_while_pending_jump(p):
+    "while_pending_jump :"
+    end = quadruples.stack_jumps.pop()
+    return_to_while = quadruples.stack_jumps.pop()
+    # Generate GOTO quadruple
+    quad = ['GOTO', '', '', return_to_while]
+    quadruples.quadruples.append(quad)
+    # Solve pending jump; what comes after the while
+    quadruples.quadruples[end][3] = len(quadruples.quadruples)
+
+#-----loop
 def p_input(p):
     '''
     input : INPUT LPAREN variable RPAREN SEMIC
