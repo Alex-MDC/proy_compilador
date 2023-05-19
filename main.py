@@ -182,7 +182,13 @@
 #               | empty
 # ------------------------------
 #
-#  <writing>    : print ( super_expression ) ;
+#  <writing>    : print ( writing2 ) ;
+#
+#  <writing2>   : CTE_STR writing3
+#               | super_expression writing3
+#
+#  <writing3>   : COMMA writing2
+#               | empty
 # ------------------------------
 #
 #  <return>        : RETURN id
@@ -251,6 +257,7 @@ tokens = [
     'CTE_INT', 
     'CTE_FLOAT', 
     'CTE_CHAR',
+    'CTE_STR',
     
     'EQUALS',
     'EQEQ',
@@ -293,7 +300,8 @@ t_RBRACKET  = r'\]'
 
 t_CTE_INT       = r'\d+'
 t_CTE_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
-t_CTE_CHAR      = r'"[^"]"'
+t_CTE_CHAR      = r"'[^']'"
+t_CTE_STR       = r'"([^"\\]|\\.)*"'
 
 t_EQUALS    = r'='
 t_GT        = r'>'
@@ -326,7 +334,7 @@ lexer = lex()
 
 # Test it out
 data = f'''
-False True
+False True "hola" 'c'
 main {{ if True 4 and or}}
 '''
 
