@@ -2,8 +2,11 @@ class Context:
     def __init__(self):
         self.current_type = ''
         self.vars = [{}]
-        self.params = []
         self.scope = []
+        
+        # For <call> diagram
+        self.param_counter = 0
+        self.param_list = []
     
     def setCurrType(self, curr):
         self.current_type = curr
@@ -22,18 +25,6 @@ class Context:
     def clearVars(self):
         self.vars.clear()
 
-    def addParams(self, param_type):
-        '''
-        Params is a list that only contains the type of the parameters in order
-        '''
-        self.params.append(param_type)
-
-    def getParams(self):
-        return self.params
-
-    def clearParams(self):
-        self.params.clear()
-
     def setScope(self, scope):
         self.scope.append(scope)
 
@@ -42,3 +33,21 @@ class Context:
     
     def getScope(self):
         return self.scope[-1]
+    
+    def getParamCounter(self):
+        return self.param_counter
+
+    def incrementParamCounter(self):
+        self.param_counter += 1
+    
+    def resetParamCounter(self):
+        self.param_counter = 0
+
+    def setParamListCALL(self, param_list):
+        self.param_list = param_list
+    
+    def getParamListCALL(self):
+        return self.param_list
+    
+    def getSingleParamCALL(self, index):
+        return self.param_list[index]
