@@ -23,3 +23,6 @@ class Quadruples:
     def increment_counter(self):
         self.temporals_counter += 1
     
+    def reset_temporal_counter(self):
+        self.temporals_counter = 1
+    

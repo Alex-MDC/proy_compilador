@@ -20,7 +20,7 @@ semanticCube = SemanticCube()
 
 def p_program(p):
     '''
-    program : set_global_scope dv df dc MAIN block
+    program : set_global_scope dv df dc MAIN solve_pending_jump block
     '''
     functionTable.print_function_table()
     functionTable.delete_function_table()
@@ -41,6 +41,13 @@ def p_set_global_scope(p):
 
     # Add to function table
     functionTable.add_function('main', 'int')
+
+    # Add quadruple for jump to main
+    quad = ['GOTO', 'main', '', '']
+    quadruples.quadruples.append(quad)
+
+    # Add to jump's stack to solve later
+    quadruples.stack_jumps.append(len(quadruples.quadruples) - 1)
 
 def p_dv(p):
     '''
@@ -107,6 +114,16 @@ def p_statement(p):
     '''
     p[0] = ('statement',p[1])
 
+def p_dv_func(p):
+    '''
+    dv_func : dec_vars dv_func
+        | empty
+    '''
+    if (len(p) == 3):
+        p[0] = (p[1],p[2])
+    else:
+        p[0] = p[1]
+
 def p_dec_vars(p):
     '''
     dec_vars : VAR dec_vars2
@@ -124,12 +141,12 @@ def p_dec_vars4(p):
     '''
     dec_vars4 : ID dec_vars6 dec_vars5
     '''
-    # Add var and check if variable is not already declared within current function (scope) or globally
-    if (functionTable.get_var_type_in_function('main', p[1])):
-        raise yacc.YaccError(f"Variable {p[1]} already declared globally")
-    
+    # Add var and check if variable is not already declared within current function (scope)
     if (functionTable.add_var_to_function(curr.getScope(), p[1], curr.getCurrType()) is None):
         raise yacc.YaccError(f"Variable {p[1]} already declared")
+
+    # Update function's resources
+    functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
 
     p[0]=('dec_vars4',p[1],p[2],p[3])
 
@@ -183,14 +200,11 @@ def p_dec_vars8(p):
 
 def p_function(p):
     '''
-    function : function2 ID set_scope LPAREN function3 RPAREN dec_vars block
+    function : function2 ID set_scope LPAREN function3 RPAREN dv_func block
     '''
-    # Set list of parameters' types to function
-    for param in reversed(curr.params):
-        functionTable.add_param_to_function(p[2], param)
-
-    # Clear temp params so another function can use them
-    curr.clearParams()
+    # Add quad ENDFUNC
+    quad = ['ENDFUNC', '', '', '']
+    quadruples.quadruples.append(quad)
 
     # We are out of the current scope
     curr.popScope()
@@ -216,9 +230,15 @@ def p_set_scope(p):
     # Set current scope
     curr.setScope(p[-1])
 
+    # Each time we enter a new scope we can reuse temporals from before
+    quadruples.reset_temporal_counter()
+
     # Add function to function table
     if (functionTable.add_function(p[-1], p[-2]) is None):
         raise yacc.YaccError(f"Function {p[-1]} already declared")
+
+    # Save dirVir to be equal to quad where function starts
+    functionTable.set_dirVir(curr.getScope(), len(quadruples.quadruples))
 
 def p_class(p):
     '''
@@ -292,19 +312,20 @@ def p_assignment(p):
 
 def p_parameter(p):
     '''
-    parameter : simple_type ID parameter2
+    parameter : simple_type ID add_parameter parameter2
     '''
-    # Add parameters' type to temp params that do not belong to any function yet
-    curr.addParams(p[1])
-
-    # Add var and check if variable is not already declared within function or globally
-    if (functionTable.get_var_type_in_function('main', p[2])):
-        raise yacc.YaccError(f"Variable {p[2]} already declared globally")
-    
+    # Add var and check if variable is not already declared within function
     if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1]) is None):
         raise yacc.YaccError(f"Variable {p[2]} already declared")
+
+    # Update function's resources
+    functionTable.set_resources_to_function(curr.getScope(), 'var ' + p[1])
     
     p[0] = ('parameter',p[1],p[2],p[3])
+
+def p_add_parameter(p):
+    "add_parameter :"
+    functionTable.add_param_to_function(curr.getScope(), p[-2])
 
 def p_parameter2(p):
     '''
@@ -410,6 +431,9 @@ def p_check_for_boolean_op(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
+                # Update function's resources
+                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
 def p_expression(p):
     '''
     expression : exp expression2
@@ -471,6 +495,9 @@ def p_check_for_relational_op(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
+                # Update function's resources
+                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
 def p_check_for_sum_rest(p):
     "check_for_sum_rest :"
     # Check that fake bottom (-1) does not exist
@@ -499,6 +526,9 @@ def p_check_for_sum_rest(p):
                 quadruples.stack_operands.append(temporal)
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
+            
+                # Update function's resources
+                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
 
 def p_exp2(p):
     '''
@@ -546,6 +576,9 @@ def p_check_for_mult_div(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
+                # Update function's resources
+                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
 def p_term2(p):
     '''
     term2 : TIMES push_operator term
@@ -590,7 +623,7 @@ def p_push_operand(p):
     # quadruples.stack_types.append(type)
     #
     # TODO check var is declared locally to push it, if not, check global. if not either, error undeclared var
-    if(functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
+    if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
         quadruples.stack_operands.append(p[-1])
         type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
         quadruples.stack_types.append(type)
@@ -636,7 +669,7 @@ def p_variable3(p):
 
 def p_call(p):
     '''
-    call : ID verify_function_exists call2
+    call : ID verify_function_exists call2 add_gosub
        | ID call3
     '''
     p[0] = ('call',p[1],p[2] )
@@ -648,15 +681,30 @@ def p_verify_function_exists(p):
     if (functionTable.get_function(p[-1]) is None):
         raise yacc.YaccError(f"Function {p[-1]} not declared")
 
+    # Get params' table of function being called
+    curr.setParamListCALL(functionTable.get_params_of_function(p[-1]))
+    
+    # Generate ERA quad
+    quad = ['ERA', '', '', p[-1]]
+    quadruples.quadruples.append(quad)
+
+    # Start parameter counter to 0
+    curr.resetParamCounter()
+
 def p_call2(p):
     '''
     call2 : LPAREN call4 RPAREN
     '''
+    # Verify parameter counter matches the parameter list's size
+    param_list = curr.getParamListCALL()
+    if (curr.getParamCounter() != len(param_list)):
+        raise yacc.YaccError('Arguments number do not match')
+
     p[0] = ('call2',p[1],p[2],p[3] )
 
 def p_call4(p):
     '''
-    call4 : exp call5
+    call4 : exp verify_argument call5
      | empty
     '''
     if (len(p) == 3):
@@ -664,9 +712,25 @@ def p_call4(p):
     else:
         p[0] = ('call4',p[1])
 
+def p_verify_argument(p):
+    "verify_argument :"
+    expr_type = quadruples.stack_types.pop()
+    expression = quadruples.stack_operands.pop()
+
+    # Verify argument type against parameter K in parameter table
+    if (curr.getSingleParamCALL(curr.getParamCounter()) != expr_type):
+            raise yacc.YaccError('Argument type do not match')
+
+    # Add PARAM quad
+    quad = ['PARAM', expression, '', curr.getParamCounter()]
+    quadruples.quadruples.append(quad)
+
+    # Increment parameter counter
+    curr.incrementParamCounter()        
+
 def p_call5(p):
     '''
-    call5 : COMMA exp call5
+    call5 : COMMA call4
      | empty
     '''
     if (len(p) == 4):
@@ -710,6 +774,13 @@ def p_call8(p):
     elif(len(p)== 2):
         p[0] = p[1]
 
+def p_add_gosub(p):
+    "add_gosub :"
+
+    # Generate GOSUB quadruple
+    quad = ['GOSUB', '', '', p[-3]]
+    quadruples.quadruples.append(quad)
+
 def p_condition(p):
     '''
     condition : IF LPAREN super_expression RPAREN add_gotof block condition2 solve_pending_jump
@@ -731,7 +802,7 @@ def p_add_gotof(p):
     expr_type = quadruples.stack_types.pop()
     expression = quadruples.stack_operands.pop()
 
-    if expr_type is not 'bool':
+    if expr_type != 'bool':
         raise yacc.YaccError(f"If requires a boolean expression!")
     else:
         # Generate quadruple
@@ -759,6 +830,9 @@ def p_solve_pending_jump(p):
 
     # Solve pending jump
     quadruples.quadruples[pending_jump][3] = len(quadruples.quadruples)
+
+    # Reset temporal counter so another function can use them
+    quadruples.reset_temporal_counter()
 
 def p_writing(p):
     '''
@@ -824,7 +898,7 @@ def p_while_gotof(p):
     expr_type = quadruples.stack_types.pop()
     expression = quadruples.stack_operands.pop()
 
-    if expr_type is not 'bool':
+    if expr_type != 'bool':
         raise yacc.YaccError(f"While requires a boolean expression!")
     else:
         # Generate quadruple

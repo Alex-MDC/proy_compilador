@@ -16,7 +16,9 @@ class FunctionTable:
         self.functions[name] = {
             'return_type': return_type,
             'var_table': VariableTable(),
-            'params_type': []
+            'params_type': [],
+            'dirVir': None,
+            'resources': [0] * 8 # [VI, VF, VB, VC, TI, TF, TB, TC]
         }
         return f'Function {name} added!'
 
@@ -51,6 +53,46 @@ class FunctionTable:
         else:
             return None
     
+    def set_dirVir(self, func_name, dir):
+        func = self.get_function(func_name)
+        func['dirVir'] = dir
+
+    def get_dirVir(self, func_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['dirVir']
+        else:
+            return None
+    
+    def set_resources_to_function(self, func_name, resource_name):
+        func = self.get_function(func_name)
+
+        if resource_name == 'var int':
+            func['resources'][0] += 1
+        elif resource_name == 'var float':
+            func['resources'][1] += 1
+        elif resource_name == 'var bool':
+            func['resources'][2] += 1
+        elif resource_name == 'var char':
+            func['resources'][3] += 1
+        elif resource_name == 'temp int':
+            func['resources'][4] += 1
+        elif resource_name == 'temp float':
+            func['resources'][5] += 1
+        elif resource_name == 'temp bool':
+            func['resources'][6] += 1
+        elif resource_name == 'temp char':
+            func['resources'][7] += 1
+
+    def get_resources_in_function(self, func_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['resources']
+        else:
+            return None
+            
     def delete_function_table(self):
         self.functions.clear()
 
@@ -58,6 +100,8 @@ class FunctionTable:
         for func_name, func_data in self.functions.items():
             print(f'Function: {func_name}')
             print(f"Return type: {func_data['return_type']}")
+            print(f"Dir Vir: {func_data['dirVir']}")
+            print(f"Resources: {func_data['resources']}")
             print(f"Params list: {func_data['params_type']}")
             func_data['var_table'].print_var_table()
             print()

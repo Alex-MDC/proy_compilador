@@ -35,6 +35,10 @@
 #              | arr_assign
 # ------------------------------
 #
+#  <dv_func> : dec_vars dv_func
+#              | empty
+# ------------------------------
+#
 #  <dec_vars>       : VAR dec_vars2
 #                   | VAR dec_vars3
 #
@@ -57,7 +61,7 @@
 #                   | empty
 # ------------------------------
 #
-#  <function>      : function2 ID ( function3 ) dec_vars block
+#  <function>      : function2 ID ( function3 ) dv_func block
 #
 #  <function2>     : simple_type
 #                  | VOID
