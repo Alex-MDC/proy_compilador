@@ -208,6 +208,8 @@ def p_function(p):
 
     # We are out of the current scope
     curr.popScope()
+    #reset Scope type
+    curr.setScopeType(None)
 
     p[0] = ('function',p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 
@@ -217,6 +219,9 @@ def p_function2(p):
               | VOID
     '''
     p[0] = p[1]
+    #we need to save the return type for further verification
+    curr.setScopeType(p[1])
+
 
 def p_function3(p):
     '''
@@ -873,14 +878,41 @@ def p_generate_quad(p):
 
 def p_return(p):
     '''
-    return : RETURN ID
-          | RETURN super_expression
+    return : RETURN ID ret_ver_id
+          | RETURN super_expression ret_ver_supexp
     '''
-    # Verify id exists in current scope or global scope
-    if ((functionTable.get_var_type_in_function(curr.getScope(), p[2]) is None) and (functionTable.get_var_type_in_function('main', p[2]) is None)):
-        raise yacc.YaccError(f"Variable {p[2]} is not declared")
+    #redundancy check ,if we are in a void func and validate NOT TO RETURN anything
+    if(curr.getScopeType()=="void"):
+        raise yacc.YaccError("Error, void function should not have a return statement")
+    
 
     p[0] = ('return',p[1],p[2])
+
+def p_ret_ver_id(p):
+    "ret_ver_id :"
+    if(curr.getScopeType()=="void"):
+        raise yacc.YaccError("Error, void function should not have a return statement")
+    # Verify id exists in current scope or global scope
+    if ((functionTable.get_var_type_in_function(curr.getScope(), p[-1]) is None) and (functionTable.get_var_type_in_function('main', p[-1]) is None)):
+        raise yacc.YaccError(f"Variable {p[-1]} is not declared")
+    #find local or global, compare type to expected return
+    localtype = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+    globaltype = functionTable.get_var_type_in_function('main', p[-1])
+    if((localtype != None)and (localtype != curr.getScopeType())):
+        raise yacc.YaccError("return-type mismatch")
+    elif((globaltype != None)and (globaltype != curr.getScopeType())):
+        raise yacc.YaccError("return-type mismatch")
+    
+def p_ret_ver_supexp(p):
+    "ret_ver_supexp :"
+    if(curr.getScopeType()=="void"):
+        raise yacc.YaccError("Error, void function should not have a return statement")
+    # Verify super expression type agaisnt scope type
+    tempquad = quadruples.stack_types.copy()
+    #print(tempquad)
+    if ( tempquad.pop() != curr.getScopeType()):
+        raise yacc.YaccError("return-type mismatch")
+    
 
 #-----loop
 def p_loop(p):

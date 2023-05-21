@@ -3,11 +3,21 @@ class Context:
         self.current_type = ''
         self.vars = [{}]
         self.scope = []
+
+        #for return type handling
+        self.scope_type = None
         
         # For <call> diagram
         self.param_counter = 0
         self.param_list = []
     
+
+    def setScopeType(self, curr):
+        self.scope_type = curr
+    
+    def getScopeType(self):
+        return self.scope_type
+
     def setCurrType(self, curr):
         self.current_type = curr
     
