@@ -208,19 +208,15 @@ def p_function(p):
 
     # We are out of the current scope
     curr.popScope()
-    #reset Scope type
-    curr.setScopeType(None)
 
     p[0] = ('function',p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 
 def p_function2(p):
     '''
-    function2 : simple_type
+    function2 : simple_type 
               | VOID
     '''
     p[0] = p[1]
-    #we need to save the return type for further verification
-    curr.setScopeType(p[1])
 
 
 def p_function3(p):
@@ -232,6 +228,14 @@ def p_function3(p):
 
 def p_set_scope(p):
     "set_scope :"
+    
+    #save potential return type if function is not void
+    if(p[-2] != "void"):
+        #save return type as a duplicate var with the name of the function
+        ret_type = p[-2]
+        varName = p[-1]
+        if (functionTable.add_var_to_function("main", varName, ret_type) is None):
+            raise yacc.YaccError(f"Variable {p[-1]} already declared")
     # Set current scope
     curr.setScope(p[-1])
 
@@ -882,7 +886,7 @@ def p_return(p):
           | RETURN super_expression ret_ver_supexp
     '''
     #redundancy check ,if we are in a void func and validate NOT TO RETURN anything
-    if(curr.getScopeType()=="void"):
+    if(functionTable.get_var_type_in_function('main',curr.getScope() )=="void"):
         raise yacc.YaccError("Error, void function should not have a return statement")
     
 
@@ -890,27 +894,45 @@ def p_return(p):
 
 def p_ret_ver_id(p):
     "ret_ver_id :"
-    if(curr.getScopeType()=="void"):
+    expected_return_type = functionTable.get_var_type_in_function('main',curr.getScope() ) 
+    print(expected_return_type)
+    if( expected_return_type == None):
         raise yacc.YaccError("Error, void function should not have a return statement")
+    # further verification of the newly read ID
     # Verify id exists in current scope or global scope
     if ((functionTable.get_var_type_in_function(curr.getScope(), p[-1]) is None) and (functionTable.get_var_type_in_function('main', p[-1]) is None)):
-        raise yacc.YaccError(f"Variable {p[-1]} is not declared")
-    #find local or global, compare type to expected return
+        raise yacc.YaccError(f"Variable {p[-1]} is not declared locally or globally")
+    #assign the currently read ID type to local / global 
     localtype = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
     globaltype = functionTable.get_var_type_in_function('main', p[-1])
-    if((localtype != None)and (localtype != curr.getScopeType())):
+    if((localtype != None)and (localtype != expected_return_type)):
         raise yacc.YaccError("return-type mismatch")
-    elif((globaltype != None)and (globaltype != curr.getScopeType())):
+    elif((globaltype != None)and (globaltype != expected_return_type)):
         raise yacc.YaccError("return-type mismatch")
+    #assign the newly read ID as the value of the variable matching the function name
+    if(expected_return_type == localtype):
+        #TODO return the ID
+        pass
+    elif(expected_return_type == globaltype):
+        #TODO return the ID
+        pass
+    else:
+        raise yacc.YaccError("ERROR: return type mismatch")
+    #----
+    
+
     
 def p_ret_ver_supexp(p):
     "ret_ver_supexp :"
-    if(curr.getScopeType()=="void"):
+    expected_return_type = functionTable.get_var_type_in_function('main',curr.getScope() ) 
+    print(expected_return_type)
+    if( expected_return_type == None):
         raise yacc.YaccError("Error, void function should not have a return statement")
+    
     # Verify super expression type agaisnt scope type
     tempquad = quadruples.stack_types.copy()
     #print(tempquad)
-    if ( tempquad.pop() != curr.getScopeType()):
+    if ( tempquad.pop() != expected_return_type):
         raise yacc.YaccError("return-type mismatch")
     
 
