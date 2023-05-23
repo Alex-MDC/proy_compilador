@@ -9,3 +9,11 @@ Avances:
 2. Semántica básica de variables: Directorio de Funciones y tabla de variables
 3. Cubo semántico
 4. Ya se llena el directorio de funciones y respectivas tablas de variables, a la vez que verifica que la variable o función no haya sido previamente declarada.
+
+# Adv 6
+------------------
+Avances:
+1. Updates to syntax diagram , neural points and intermediate code
+2. Up to 5th deliverable complete
+3. 6th: previous deliverables have included the following planned virtual memory design
+4. The virtual machine and in-code implementation of the memory is pending
