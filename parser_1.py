@@ -236,6 +236,7 @@ def p_set_scope(p):
         varName = p[-1]
         if (functionTable.add_var_to_function("main", varName, ret_type) is None):
             raise yacc.YaccError(f"Variable {p[-1]} already declared")
+        
     # Set current scope
     curr.setScope(p[-1])
 
@@ -681,6 +682,9 @@ def p_call(p):
     call : ID verify_function_exists call2 add_gosub
        | ID call3
     '''
+    # Pop paramCounter from stack since we have finished with all args of curr call
+    curr.resetParamCounter()
+
     p[0] = ('call',p[1],p[2] )
 
 def p_verify_function_exists(p):
@@ -697,8 +701,8 @@ def p_verify_function_exists(p):
     quad = ['ERA', '', '', p[-1]]
     quadruples.quadruples.append(quad)
 
-    # Start parameter counter to 0
-    curr.resetParamCounter()
+    # Push to stack new paramCounter equal to 0
+    curr.addParamCounter()
 
 def p_call2(p):
     '''
@@ -727,7 +731,12 @@ def p_verify_argument(p):
     expression = quadruples.stack_operands.pop()
 
     # Verify argument type against parameter K in parameter table
-    if (curr.getSingleParamCALL(curr.getParamCounter()) != expr_type):
+    expected_arg_type = curr.getSingleParamCALL(curr.getParamCounter())
+    
+    if (expected_arg_type is None):
+        raise yacc.YaccError('Too many arguments')
+    
+    if (expected_arg_type != expr_type):
             raise yacc.YaccError('Argument type do not match')
 
     # Add PARAM quad
@@ -789,15 +798,22 @@ def p_add_gosub(p):
     # Generate GOSUB quadruple
     quad = ['GOSUB', '', '', p[-3]]
     quadruples.quadruples.append(quad)
-    # parche de recursion
+
+    # Parche de recursion / Snapshot
     temporal = 't' + str(quadruples.get_temporal_counter())
-    quad = ['=',p[-3],'',temporal]
+
+    quad = ['=', p[-3], '', temporal]
     quadruples.quadruples.append(quad)
-    quadruples.stack_operands.append(temporal)
-    result_type = functionTable.get_returnType_of_function(curr.getScope())
+
+    # This returns the type of main, not the function type
+    result_type = functionTable.get_returnType_of_function(p[-3])
     quadruples.stack_types.append(result_type)
+    quadruples.stack_operands.append(temporal)
+
+    # Increment temporal counter
     quadruples.increment_counter()
-     # Update function's resources
+    
+    # Update function's resources
     functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
 
 def p_condition(p):
