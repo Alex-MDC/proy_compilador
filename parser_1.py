@@ -789,7 +789,7 @@ def p_add_gosub(p):
     # Generate GOSUB quadruple
     quad = ['GOSUB', '', '', p[-3]]
     quadruples.quadruples.append(quad)
-    #TODO parche de recursion
+    # parche de recursion
     temporal = 't' + str(quadruples.get_temporal_counter())
     quad = ['=',p[-3],'',temporal]
     quadruples.quadruples.append(quad)
@@ -913,9 +913,6 @@ def p_ret_ver_supexp(p):
         raise yacc.YaccError("return-type mismatch")
     quad = ["return",'','',quadruples.stack_operands.pop()]
     quadruples.quadruples.append(quad)
-    quadruples.increment_counter()
-
-    
 
 #-----loop
 def p_loop(p):
