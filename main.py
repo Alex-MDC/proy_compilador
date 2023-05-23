@@ -195,8 +195,7 @@
 #               | empty
 # ------------------------------
 #
-#  <return>        : RETURN id
-#                  | RETURN super_expression
+#  <return>        : RETURN super_expression
 # ------------------------------
 #
 #  <loop>          : while ( super_expression ) block

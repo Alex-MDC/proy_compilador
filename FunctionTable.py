@@ -53,6 +53,14 @@ class FunctionTable:
             return func['params_type']
         else:
             return None
+        
+    def get_returnType_of_function(self, func_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['return_type']
+        else:
+            return None
     
     def set_dirVir(self, func_name, dir):
         func = self.get_function(func_name)
