@@ -789,6 +789,16 @@ def p_add_gosub(p):
     # Generate GOSUB quadruple
     quad = ['GOSUB', '', '', p[-3]]
     quadruples.quadruples.append(quad)
+    #TODO parche de recursion
+    temporal = 't' + str(quadruples.get_temporal_counter())
+    quad = ['=',p[-3],'',temporal]
+    quadruples.quadruples.append(quad)
+    quadruples.stack_operands.append(temporal)
+    result_type = functionTable.get_returnType_of_function(curr.getScope())
+    quadruples.stack_types.append(result_type)
+    quadruples.increment_counter()
+     # Update function's resources
+    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
 
 def p_condition(p):
     '''
@@ -882,8 +892,7 @@ def p_generate_quad(p):
 
 def p_return(p):
     '''
-    return : RETURN ID ret_ver_id
-          | RETURN super_expression ret_ver_supexp
+    return : RETURN super_expression ret_ver_supexp
     '''
     #redundancy check ,if we are in a void func and validate NOT TO RETURN anything
     if(functionTable.get_var_type_in_function('main',curr.getScope() )=="void"):
@@ -891,49 +900,21 @@ def p_return(p):
     
 
     p[0] = ('return',p[1],p[2])
-
-def p_ret_ver_id(p):
-    "ret_ver_id :"
-    expected_return_type = functionTable.get_var_type_in_function('main',curr.getScope() ) 
-    print(expected_return_type)
-    if( expected_return_type == None):
-        raise yacc.YaccError("Error, void function should not have a return statement")
-    # further verification of the newly read ID
-    # Verify id exists in current scope or global scope
-    if ((functionTable.get_var_type_in_function(curr.getScope(), p[-1]) is None) and (functionTable.get_var_type_in_function('main', p[-1]) is None)):
-        raise yacc.YaccError(f"Variable {p[-1]} is not declared locally or globally")
-    #assign the currently read ID type to local / global 
-    localtype = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
-    globaltype = functionTable.get_var_type_in_function('main', p[-1])
-    if((localtype != None)and (localtype != expected_return_type)):
-        raise yacc.YaccError("return-type mismatch")
-    elif((globaltype != None)and (globaltype != expected_return_type)):
-        raise yacc.YaccError("return-type mismatch")
-    #assign the newly read ID as the value of the variable matching the function name
-    if(expected_return_type == localtype):
-        #TODO return the ID
-        pass
-    elif(expected_return_type == globaltype):
-        #TODO return the ID
-        pass
-    else:
-        raise yacc.YaccError("ERROR: return type mismatch")
-    #----
-    
-
     
 def p_ret_ver_supexp(p):
     "ret_ver_supexp :"
     expected_return_type = functionTable.get_var_type_in_function('main',curr.getScope() ) 
-    print(expected_return_type)
+    #print(expected_return_type)
     if( expected_return_type == None):
         raise yacc.YaccError("Error, void function should not have a return statement")
     
-    # Verify super expression type agaisnt scope type
-    tempquad = quadruples.stack_types.copy()
-    #print(tempquad)
-    if ( tempquad.pop() != expected_return_type):
+    # Verify super expression type against scope type
+    if ( quadruples.stack_types.pop() != expected_return_type):
         raise yacc.YaccError("return-type mismatch")
+    quad = ["return",'','',quadruples.stack_operands.pop()]
+    quadruples.quadruples.append(quad)
+    quadruples.increment_counter()
+
     
 
 #-----loop
