@@ -6,6 +6,7 @@ from Quadruples import Quadruples
 from VariableTable import VariableTable
 from SemanticCube import SemanticCube
 from MemoryMap import MemoryMap
+from VirtualMachine import VirtualMachine
 # --- Parser
 
 # Write functions for each grammar rule which is specified in the docstring.
@@ -21,7 +22,7 @@ semanticCube = SemanticCube()
 memGlobal = MemoryMap(1000, 1500, 2000, 2500)
 memLocal = MemoryMap(15000,15500,16000,16500)
 memTemporal = MemoryMap(20000, 20500, 21000, 215000)
-memConstants = MemoryMap(25000, 26000, 27000, 30000)
+memConstants = MemoryMap(25000, 26000, 27000, 30000, True)
 
 # TODO Set virtual address for functions (?)
 # Convert 'signos' into numerical codes 
@@ -34,6 +35,9 @@ def p_program(p):
     # Add quadruple for end of program
     quad = ['ENDPROG', '', '', '']
     quadruples.quadruples.append(quad)
+
+    # Execute code in virtual machine
+    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
 
     functionTable.print_function_table()
     functionTable.delete_function_table()
@@ -1050,7 +1054,7 @@ def p_generate_quad(p):
 
     # Generate quadruple
     result = quadruples.stack_operands.pop()
-    quad = ['print', '', '', result]
+    quad = ['PRINT', '', '', result]
     quadruples.quadruples.append(quad)
 
     quadruples.stack_types.pop()
@@ -1076,7 +1080,8 @@ def p_ret_ver_supexp(p):
     # Verify super expression type against scope type
     if ( quadruples.stack_types.pop() != expected_return_type):
         raise yacc.YaccError("return-type mismatch")
-    quad = ["return",'','',quadruples.stack_operands.pop()]
+    
+    quad = ["RETURN",'','',quadruples.stack_operands.pop()]
     quadruples.quadruples.append(quad)
 
 #-----loop

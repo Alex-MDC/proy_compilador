@@ -8,6 +8,30 @@ class Context:
         self.param_counter = []
         self.param_list = []
 
+        # Operational codes
+        self.op_codes = {
+            '+' : 0,
+            '-' : 1,
+            '*' : 2,
+            '/' : 3,
+            '>' : 4,
+            '>' : 5,
+            '>=' : 6,
+            '<=' : 7,
+            '==' : 8,
+            '<>' : 9,
+            'ENDFUNC' : 10,
+            'ENDPROG' : 11,
+            'GOTO' : 12,
+            'GOTOF' : 13,
+            'ERA' : 14,
+            'PARAM' : 15,
+            'GOSUB' : 16,
+            'PRINT' : 17,
+            'RETURN' : 18,
+            'INPUT' : 19
+        }
+
     def setCurrType(self, curr):
         self.current_type = curr
     

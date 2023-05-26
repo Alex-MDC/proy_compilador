@@ -1,9 +1,10 @@
 class MemoryMap:
-    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool):
+    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, isConstant = False):
         self.int = []
         self.float = []
         self.char = []
         self.bool = []
+        self.isConstant = isConstant
 
         self.startDirInt = startDirInt
         self.startDirFloat = startDirFloat
@@ -14,7 +15,7 @@ class MemoryMap:
         virtual_address = 0
         
         if var_type == 'int':
-            self.int.append(var_name)
+            self.int.append(var_name if self.isConstant else 0)
             virtual_address = (len(self.int) - 1) + self.startDirInt
 
             # Out of bounds error
@@ -23,7 +24,7 @@ class MemoryMap:
                 return None
 
         elif var_type == 'float':
-            self.float.append(var_name)
+            self.float.append(var_name if self.isConstant else 0)
             virtual_address = (len(self.float) - 1) + self.startDirFloat
 
             # Out of bounds error
@@ -32,7 +33,7 @@ class MemoryMap:
                 return None
 
         elif var_type == 'char':
-            self.char.append(var_name)
+            self.char.append(var_name if self.isConstant else 0)
             virtual_address = (len(self.char) - 1) + self.startDirChar
             
             # Out of bounds error
@@ -41,7 +42,7 @@ class MemoryMap:
                 return None
 
         elif var_type == 'bool':
-            self.bool.append(var_name)
+            self.bool.append(var_name if self.isConstant else 0)
             virtual_address = (len(self.bool) - 1) + self.startDirBool
         
         # Return virtual address
