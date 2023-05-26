@@ -25,11 +25,11 @@ class FunctionTable:
     def get_function(self, name):
         return self.functions.get(name)
 
-    def add_var_to_function(self, func_name, var_name, data_type):
+    def add_var_to_function(self, func_name, var_name, data_type, dirVir):
         func = self.get_function(func_name)
 
         if func:
-            return func['var_table'].add_var(var_name, data_type)
+            return func['var_table'].add_var(var_name, data_type, dirVir)
         else:
             return None
 
@@ -41,6 +41,13 @@ class FunctionTable:
         else:
             return None
     
+    def get_var_dirVir_in_function(self, func_name, var_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['var_table'].get_var_dirVir(var_name)
+        else:
+            return None
     
     def add_param_to_function(self, func_name, param):
         func = self.get_function(func_name)

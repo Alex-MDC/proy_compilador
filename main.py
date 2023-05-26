@@ -306,13 +306,13 @@ t_CTE_FLOAT     = r'((\d*\.\d+)(E[\+-]?\d+)?|([1-9]\d*E[\+-]?\d+))'
 t_CTE_CHAR      = r"'[^']'"
 t_CTE_STR       = r'"([^"\\]|\\.)*"'
 
-t_EQUALS    = r'='
-t_GT        = r'>'
-t_LT        = r'<'
-t_NOTEQ     = r'<>'
-t_LESS_OR_EQ_THAN = r'<='
-t_GREATER_OR_EQ_THAN = r'>='
-t_EQEQ     = r'=='
+t_EQUALS                   = r'='
+t_GT                       = r'>'
+t_LT                       = r'<'
+t_NOTEQ                    = r'<>'
+t_LESS_OR_EQ_THAN          = r'<='
+t_GREATER_OR_EQ_THAN       = r'>='
+t_EQEQ                     = r'=='
 
 # A function can be used if there is an associated action.
 # Write the matching regex in the docstring.
@@ -337,8 +337,8 @@ lexer = lex()
 
 # Test it out
 data = f'''
-False True "hola" 'c'
-main {{ if True 4 and or}}
+2
+0.5
 '''
 
 # Give the lexer some input

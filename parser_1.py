@@ -5,12 +5,11 @@ from FunctionTable import FunctionTable
 from Quadruples import Quadruples 
 from VariableTable import VariableTable
 from SemanticCube import SemanticCube
-#---------------------------
+from MemoryMap import MemoryMap
 # --- Parser
 
-# Write functions for each grammar rule which is
-# specified in the docstring.
-#terminales en mayus. no term en minsuc
+# Write functions for each grammar rule which is specified in the docstring.
+# Terminales en mayus. no term en minsuc
 
 curr = Context()
 functionTable = FunctionTable()
@@ -18,13 +17,39 @@ quadruples = Quadruples()
 constantsTable = VariableTable()
 semanticCube = SemanticCube()
 
+# Memory maps
+memGlobal = MemoryMap(1000, 1500, 2000, 2500)
+memLocal = MemoryMap(15000,15500,16000,16500)
+memTemporal = MemoryMap(20000, 20500, 21000, 215000)
+memConstants = MemoryMap(25000, 26000, 27000, 30000)
+
+# TODO Set virtual address for functions (?)
+# Convert 'signos' into numerical codes 
+# Delete function's vars table whenever we are out of that scope
+
 def p_program(p):
     '''
-    program : set_global_scope dv df dc MAIN solve_pending_jump block
+    program : set_global_scope dv df dc MAIN solve_pending_jump_main block
     '''
+    # Add quadruple for end of program
+    quad = ['ENDPROG', '', '', '']
+    quadruples.quadruples.append(quad)
+
     functionTable.print_function_table()
     functionTable.delete_function_table()
     quadruples.print_stacks()
+
+    print("Global memory map: ")
+    memGlobal.printMemoryMap()
+
+    print("Local memory map: ")
+    memLocal.printMemoryMap()
+
+    print("Temporal's memory map: ")
+    memTemporal.printMemoryMap()
+
+    print("Constants' memory map: ")
+    memConstants.printMemoryMap()
 
     print("Constant's table: ")
     constantsTable.print_var_table()
@@ -54,9 +79,6 @@ def p_dv(p):
     dv : dec_vars dv
         | empty
     '''
-    # Add function to function table
-    functionTable.add_function('main', 'int')
-
     if (len(p) == 3):
         p[0] = (p[1],p[2])
     else:
@@ -139,16 +161,30 @@ def p_dec_vars2(p):
 
 def p_dec_vars4(p):
     '''
-    dec_vars4 : ID dec_vars6 dec_vars5
+    dec_vars4 : ID add_var dec_vars6 dec_vars5
     '''
+    p[0]=('dec_vars4',p[1],p[2],p[3])
+
+def p_add_var(p):
+    "add_var :"
+    # Add var to memory map
+    virtual_address = 0
+    if (curr.getScope() == 'main'):
+        virtual_address = memGlobal.addVar(p[-1], curr.getCurrType())
+    else:
+        virtual_address = memLocal.addVar(p[-1], curr.getCurrType())
+    
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+
     # Add var and check if variable is not already declared within current function (scope)
-    if (functionTable.add_var_to_function(curr.getScope(), p[1], curr.getCurrType()) is None):
-        raise yacc.YaccError(f"Variable {p[1]} already declared")
+    if (functionTable.add_var_to_function(curr.getScope(), p[-1], curr.getCurrType(), virtual_address) is None):
+        raise yacc.YaccError(f"Variable {p[-1]} already declared")
 
     # Update function's resources
     functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
 
-    p[0]=('dec_vars4',p[1],p[2],p[3])
 
 def p_dec_vars5(p):
     '''
@@ -231,10 +267,18 @@ def p_set_scope(p):
     
     #save potential return type if function is not void
     if(p[-2] != "void"):
-        #save return type as a duplicate var with the name of the function
         ret_type = p[-2]
         varName = p[-1]
-        if (functionTable.add_var_to_function("main", varName, ret_type) is None):
+
+        # Add var to memory map
+        virtual_address = memGlobal.addVar(varName, ret_type)
+
+        # Check if virtual address is in valid range
+        if virtual_address is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        #save return type as a duplicate var with the name of the function
+        if (functionTable.add_var_to_function("main", varName, ret_type, virtual_address) is None):
             raise yacc.YaccError(f"Variable {p[-1]} already declared")
         
     # Set current scope
@@ -242,6 +286,9 @@ def p_set_scope(p):
 
     # Each time we enter a new scope we can reuse temporals from before
     quadruples.reset_temporal_counter()
+
+    # Reset memory map
+    memTemporal.resetMemoryMap()
 
     # Add function to function table
     if (functionTable.add_function(p[-1], p[-2]) is None):
@@ -300,16 +347,19 @@ def p_assignment(p):
     # Verify id exists in current scope or global scope
     if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
         raise yacc.YaccError(f"Variable {p[1]} is not declared")
+    
     elif (functionTable.get_var_type_in_function(curr.getScope(), p[1]) != None):
-        #save type
+        assignee_operand = functionTable.get_var_dirVir_in_function(curr.getScope(), p[1])
         type = functionTable.get_var_type_in_function(curr.getScope(), p[1])
+
     elif(functionTable.get_var_type_in_function('main', p[1]) != None):
+        assignee_operand = functionTable.get_var_dirVir_in_function('main', p[1])
         type = functionTable.get_var_type_in_function('main', p[1])
 
     # Generate quad
     operator = p[2]
-    assignee_operand = p[1]
     left_operand = quadruples.stack_operands.pop()
+
     # Verify types are same
     if(type == quadruples.stack_types.pop()):
         quad = [operator, left_operand, '', assignee_operand]
@@ -324,8 +374,15 @@ def p_parameter(p):
     '''
     parameter : simple_type ID add_parameter parameter2
     '''
+    # Add var to memory map
+    virtual_address = memLocal.addVar(p[2], p[1])
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
     # Add var and check if variable is not already declared within function
-    if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1]) is None):
+    if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1], virtual_address) is None):
         raise yacc.YaccError(f"Variable {p[2]} already declared")
 
     # Update function's resources
@@ -362,33 +419,75 @@ def p_var_cte(p):
 
 def p_add_constant_int(p):
     "add_constant_int :"
-    constantsTable.add_var(p[-1], 'int')
-    quadruples.stack_operands.append(p[-1])
+    # Add to constants' memory map 
+    virtual_address = memConstants.addVar(p[-1], 'int')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(p[-1], 'int', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
     quadruples.stack_types.append('int')
 
 def p_add_constant_float(p):
     "add_constant_float :"
-    constantsTable.add_var(p[-1], 'float')
-    quadruples.stack_operands.append(p[-1])
+    # Add to constants' memory map 
+    virtual_address = memConstants.addVar(p[-1], 'float')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(p[-1], 'float', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
     quadruples.stack_types.append('float')
 
 def p_add_neg_constant_int(p):
     "add_neg_constant_int :"
-    constantsTable.add_var(str(int(p[-1])*-1), 'int')
-    quadruples.stack_operands.append(str(int(p[-1])*-1))
+    # Add to constants' memory map 
+    virtual_address = memConstants.addVar(str(int(p[-1])*-1), 'int')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(str(int(p[-1])*-1), 'int', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
     quadruples.stack_types.append('int')
     p[0] = str(int(p[-1])*-1)
 
 def p_add_neg_constant_float(p):
     "add_neg_constant_float :"
-    constantsTable.add_var(str(float(p[-1])*-1), 'float')
-    quadruples.stack_operands.append(str(float(p[-1])*-1))
+    # Add to constants' memory map 
+    virtual_address = memConstants.addVar(str(int(p[-1])*-1), 'int')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(str(float(p[-1])*-1), 'float', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
     quadruples.stack_types.append('float')
     p[0] = str(float(p[-1])*-1)
 
 def p_add_constant_char(p):
     "add_constant_char :"
-    constantsTable.add_var(p[-1], 'char')
+    # Add to constants' memory map 
+    virtual_address = memConstants.addVar(p[-1], 'char')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(p[-1], 'char', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
+    quadruples.stack_types.append('char')
 
 def p_super_expression(p):
     '''
@@ -434,10 +533,18 @@ def p_check_for_boolean_op(p):
             else:
                 # Generate quad
                 temporal = 't' + str(quadruples.get_temporal_counter())
-                quad = [operator, left_operand, right_operand, temporal]
+
+                # Add temporal to memory map
+                virtual_address = memTemporal.addVar(temporal, result_type)
+
+                # Check if is in range
+                if virtual_address is None:
+                    raise yacc.YaccError(f"Stack overflow!")
+
+                quad = [operator, left_operand, right_operand, virtual_address]
                 quadruples.quadruples.append(quad)
 
-                quadruples.stack_operands.append(temporal)
+                quadruples.stack_operands.append(virtual_address)
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
@@ -498,10 +605,18 @@ def p_check_for_relational_op(p):
             else:
                 # Generate quad
                 temporal = 't' + str(quadruples.get_temporal_counter())
-                quad = [operator, left_operand, right_operand, temporal]
+
+                # Add temporal to memory map
+                virtual_address = memTemporal.addVar(temporal, result_type)
+
+                # Check if is in range
+                if virtual_address is None:
+                    raise yacc.YaccError(f"Stack overflow!")
+                
+                quad = [operator, left_operand, right_operand, virtual_address]
                 quadruples.quadruples.append(quad)
 
-                quadruples.stack_operands.append(temporal)
+                quadruples.stack_operands.append(virtual_address)
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
@@ -530,10 +645,18 @@ def p_check_for_sum_rest(p):
             else:
                 # Generate quad
                 temporal = 't' + str(quadruples.get_temporal_counter())
-                quad = [operator, left_operand, right_operand, temporal]
+
+                # Add temporal to memory map
+                virtual_address = memTemporal.addVar(temporal, result_type)
+
+                # Check if is in range
+                if virtual_address is None:
+                    raise yacc.YaccError(f"Stack overflow!")
+                
+                quad = [operator, left_operand, right_operand, virtual_address]
                 quadruples.quadruples.append(quad)
 
-                quadruples.stack_operands.append(temporal)
+                quadruples.stack_operands.append(virtual_address)
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
             
@@ -579,10 +702,18 @@ def p_check_for_mult_div(p):
             else:
                 # Generate quad
                 temporal = 't' + str(quadruples.get_temporal_counter())
-                quad = [operator, left_operand, right_operand, temporal]
+
+                # Add temporal to memory map
+                virtual_address = memTemporal.addVar(temporal, result_type)
+
+                # Check if is in range
+                if virtual_address is None:
+                    raise yacc.YaccError(f"Stack overflow!")
+                
+                quad = [operator, left_operand, right_operand, virtual_address]
                 quadruples.quadruples.append(quad)
 
-                quadruples.stack_operands.append(temporal)
+                quadruples.stack_operands.append(virtual_address)
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
@@ -626,21 +757,22 @@ def p_remove_fake_bottom(p):
 
 def p_push_operand(p):
     "push_operand :"
-    # Push operand (id and type)
-    # quadruples.stack_operands.append(p[-1])
 
-    # type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
-    # quadruples.stack_types.append(type)
-    #
-    # TODO check var is declared locally to push it, if not, check global. if not either, error undeclared var
+    # Check var is declared locally to push it, if not, check global. if not either, error undeclared var
     if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
-        quadruples.stack_operands.append(p[-1])
+        dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
         type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+
+        quadruples.stack_operands.append(dirVir)
         quadruples.stack_types.append(type)
+
     elif (functionTable.get_var_type_in_function('main', p[-1]) != None):
-        quadruples.stack_operands.append(p[-1])
+        dirVir = functionTable.get_var_dirVir_in_function('main', p[-1])
         type = functionTable.get_var_type_in_function('main', p[-1])
+
+        quadruples.stack_operands.append(dirVir)
         quadruples.stack_types.append(type)
+
     else :
         raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
 
@@ -802,13 +934,20 @@ def p_add_gosub(p):
     # Parche de recursion / Snapshot
     temporal = 't' + str(quadruples.get_temporal_counter())
 
-    quad = ['=', p[-3], '', temporal]
+    # Add temporal to memory map
+    virtual_address = memTemporal.addVar(temporal, result_type)
+
+    # Check if is in range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+
+    quad = ['=', p[-3], '', virtual_address]
     quadruples.quadruples.append(quad)
 
     # This returns the type of main, not the function type
     result_type = functionTable.get_returnType_of_function(p[-3])
     quadruples.stack_types.append(result_type)
-    quadruples.stack_operands.append(temporal)
+    quadruples.stack_operands.append(virtual_address)
 
     # Increment temporal counter
     quadruples.increment_counter()
@@ -859,8 +998,8 @@ def p_add_goto(p):
     # Solve pending jump
     quadruples.quadruples[pending_jump][3] = len(quadruples.quadruples)
 
-def p_solve_pending_jump(p):
-    "solve_pending_jump :"
+def p_solve_pending_jump_main(p):
+    "solve_pending_jump_main :"
     pending_jump = quadruples.stack_jumps.pop()
 
     # Solve pending jump
@@ -868,6 +1007,16 @@ def p_solve_pending_jump(p):
 
     # Reset temporal counter so another function can use them
     quadruples.reset_temporal_counter()
+
+    # Reset memory map
+    memTemporal.resetMemoryMap()
+
+def p_solve_pending_jump(p):
+    "solve_pending_jump :"
+    pending_jump = quadruples.stack_jumps.pop()
+
+    # Solve pending jump
+    quadruples.quadruples[pending_jump][3] = len(quadruples.quadruples)
 
 def p_writing(p):
     '''
