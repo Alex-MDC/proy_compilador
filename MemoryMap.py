@@ -1,15 +1,20 @@
 class MemoryMap:
-    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, isConstant = False):
+    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = [343], isConstant = False):
         self.int = []
         self.float = []
         self.char = []
         self.bool = []
+        self.compound = []
+        self.pointers = []
         self.isConstant = isConstant
 
         self.startDirInt = startDirInt
         self.startDirFloat = startDirFloat
         self.startDirChar = startDirChar
         self.startDirBool = startDirBool
+        self.startDirCompound = startDirCompound
+        self.startDirPointers = startDirPointers
+        #TODO adding of pointers
 
     def addVar(self, var_name, var_type):
         virtual_address = 0
@@ -40,10 +45,19 @@ class MemoryMap:
             isInbounds = virtual_address >= self.startDirChar and virtual_address < self.startDirBool
             if (isInbounds == False):
                 return None
+                
+        elif var_type == 'id':
+            self.compound.append(var_name if self.isConstant else 0)
+            virtual_address = (len(self.compound) - 1) + self.startDirCompound
 
         elif var_type == 'bool':
             self.bool.append(var_name if self.isConstant else 0)
             virtual_address = (len(self.bool) - 1) + self.startDirBool
+            # Out of bounds error
+            isInbounds = virtual_address >= self.startDirBool and virtual_address < self.startDirCompound
+            if (isInbounds == False):
+                return None
+            
         
         # Return virtual address
         return virtual_address
@@ -53,9 +67,13 @@ class MemoryMap:
         self.float.clear()
         self.char.clear()
         self.bool.clear()
+        self.compound.clear()
+        self.pointers.clear()
 
     def printMemoryMap(self):
         print(f"Int: {self.int}")
         print(f"Float: {self.float}")
         print(f"Char: {self.char}")
         print(f"Bool: {self.bool}")
+        print(f"Compound: {self.compound}")
+        print(f"Pointers: {self.pointers}")
