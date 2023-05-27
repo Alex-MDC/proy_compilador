@@ -22,7 +22,7 @@ semanticCube = SemanticCube()
 memGlobal = MemoryMap(1000, 2000, 3000, 4000,5000)
 memLocal = MemoryMap(15000,16000,17000,18000,19000)
 memTemporal = MemoryMap(20000, 21000, 22000, 23000,24000,29000)
-memConstants = MemoryMap(25000, 26000, 27000, 500,600, True)
+memConstants = MemoryMap(25000, 26000, 27000, 500,600,None, True)
 #Pointers = 29,000 ... 30,000
 
 # TODO Set virtual address for functions (?)
