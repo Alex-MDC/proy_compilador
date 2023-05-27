@@ -1,5 +1,5 @@
 class MemoryMap:
-    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = None, isConstant = False):
+    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = [343], isConstant = False):
         self.int = []
         self.float = []
         self.char = []
@@ -13,7 +13,7 @@ class MemoryMap:
         self.startDirChar = startDirChar
         self.startDirBool = startDirBool
         self.startDirCompound = startDirCompound
-        self.pointers = startDirPointers
+        self.startDirPointers = startDirPointers
         #TODO adding of pointers
 
     def addVar(self, var_name, var_type):
