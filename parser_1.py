@@ -38,7 +38,7 @@ def p_program(p):
     quadruples.quadruples.append(quad)
 
     # Execute code in virtual machine
-    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
+    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal,memTemporal)
 
     functionTable.print_function_table()
     functionTable.delete_function_table()
@@ -293,7 +293,7 @@ def p_set_scope(p):
     quadruples.reset_temporal_counter()
 
     # Reset memory map
-    memTemporal.resetMemoryMap()
+    #memTemporal.resetMemoryMap() #  TODO -- dont reset temp; works as glob
 
     # Add function to function table
     if (functionTable.add_function(p[-1], p[-2]) is None):
@@ -424,17 +424,22 @@ def p_var_cte(p):
 
 def p_add_constant_int(p):
     "add_constant_int :"
-    # Add to constants' memory map 
-    virtual_address = memConstants.addVar(p[-1], 'int')
+    #check if constant already declared
+    if (constantsTable.get_var_type(p[-1]) == None):
+        # Add to constants' memory map 
+        virtual_address = memConstants.addVar(p[-1], 'int')
 
-    # Check if virtual address is in valid range
-    if virtual_address is None:
-        raise yacc.YaccError(f"Stack overflow!")
+        # Check if virtual address is in valid range
+        if virtual_address is None:
+            raise yacc.YaccError(f"Stack overflow!")
     
-    constantsTable.add_var(p[-1], 'int', virtual_address)
+        constantsTable.add_var(p[-1], 'int', virtual_address)
 
-    quadruples.stack_operands.append(virtual_address)
-    quadruples.stack_types.append('int')
+        quadruples.stack_operands.append(virtual_address)
+        quadruples.stack_types.append('int')
+    else:
+        quadruples.stack_operands.append(constantsTable.get_var_dirVir(p[-1]))
+        quadruples.stack_types.append('int')
 
 def p_add_constant_float(p):
     "add_constant_float :"
@@ -468,7 +473,7 @@ def p_add_neg_constant_int(p):
 def p_add_neg_constant_float(p):
     "add_neg_constant_float :"
     # Add to constants' memory map 
-    virtual_address = memConstants.addVar(str(int(p[-1])*-1), 'int')
+    virtual_address = memConstants.addVar(str(float(p[-1])*-1), 'float')
 
     # Check if virtual address is in valid range
     if virtual_address is None:
@@ -1014,7 +1019,7 @@ def p_solve_pending_jump_main(p):
     quadruples.reset_temporal_counter()
 
     # Reset memory map
-    memTemporal.resetMemoryMap()
+    #memTemporal.resetMemoryMap() #  TODO no mem resets
 
 def p_solve_pending_jump(p):
     "solve_pending_jump :"
