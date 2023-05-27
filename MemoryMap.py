@@ -1,5 +1,5 @@
 class MemoryMap:
-    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = [343], isConstant = False):
+    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = None, isConstant = False):
         self.int = []
         self.float = []
         self.char = []
