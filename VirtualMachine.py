@@ -12,7 +12,6 @@ class VirtualMachine:
         self.executeVM()
     
     def initMainMem(self):
-        self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
         self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
         resources = self.functionTable.get_resources_in_function('main')
         
@@ -29,18 +28,6 @@ class VirtualMachine:
             elif i == 7:
                 for x in range(resources[i]):
                     self.memTemp[-1].addVar('defaultName','char')
-            elif i == 0:
-                for x in range(resources[i]):
-                    self.currMem[-1].addVar('defaultName','int')
-            elif i == 1:
-                for x in range(resources[i]):
-                    self.currMem[-1].addVar('defaultName','float')
-            elif i == 2:
-                for x in range(resources[i]):
-                    self.currMem[-1].addVar('defaultName','bool')
-            elif i == 3:
-                for x in range(resources[i]):
-                    self.currMem[-1].addVar('defaultName','char')
 
             
                 
