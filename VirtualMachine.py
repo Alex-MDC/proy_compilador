@@ -1,10 +1,13 @@
+from MemoryMap import *
+
 class VirtualMachine:
-    def __init__(self, quadruples, memConstants, functionTable, memGlobal,memTemp):
+    def __init__(self, quadruples, memConstants, functionTable, memGlobal):
         self.quadruples = quadruples
         self.functionTable = functionTable
         self.memGlobal = memGlobal
         self.memConstants = memConstants
-        self.memTemp = memTemp
+        self.memTemp = []
+        self.currMem = []
 
         self.executeVM()
     
@@ -154,6 +157,10 @@ class VirtualMachine:
                     # Check that a return was seen => var with same name as function is not 0
                     if dirvir_value == 0:
                         raise KeyError("Function needs a return statement")
+                #We must delete the current working memory to use the next one in the stack! This helps control the flow of
+                # active memory and passive memory
+                self.memTemp.pop()
+                self.currMem.pop()
             
             elif op_code == 'RETURN':
                 '''
@@ -168,6 +175,16 @@ class VirtualMachine:
 
                 # Once a return was seen, nothing after that should execute, return directly to migaja
                 instruction_pointer = migaja
+
+            elif op_code == "ERA":
+                '''
+                Creates memory by pushing an instance of "current" working memory and a temporal instance as well.
+                The stacking of these resolves the active memory and "sleeping" memory
+                '''
+                self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
+                self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
+			    
+            
                 
             else:
                 instruction_pointer += 1
@@ -186,19 +203,19 @@ class VirtualMachine:
         elif dir >= 5000 and dir < 6000:
             return self.memGlobal.compound[dir - 5000]
         
-        #Temporal memory map
+        #Temporal memory map 
         elif dir >= 20000 and dir < 21000:
-            return int(self.memTemp.int[dir - 20000])
+            return int(self.memTemp[-1].int[dir - 20000])
         elif dir >= 21000 and dir < 22000:
-            return float(self.memTemp.float[dir - 21000])
+            return float(self.memTemp[-1].float[dir - 21000])
         elif dir >= 22000 and dir < 23000:
-            return self.memTemp.char[dir - 22000]
+            return self.memTemp[-1].char[dir - 22000]
         elif dir >= 23000 and dir < 24000:
-            return self.memTemp.bool[dir - 23000]
+            return self.memTemp[-1].bool[dir - 23000]
         elif dir >= 24000 and dir < 25000:
-            return self.memTemp.compound[dir - 24000]
+            return self.memTemp[-1].compound[dir - 24000]
         elif dir >= 29000 and dir < 30000:
-            return self.memTemp.pointers[dir - 29000]
+            return self.memTemp[-1].pointers[dir - 29000]
 
         # Constant's memory map
         elif dir >= 25000 and dir < 26000:
@@ -232,16 +249,16 @@ class VirtualMachine:
         # elif dir >= 30000 and dir < 31000:
         #     self.memConstants.bool[dir - 30000] = left_op_dir
 
-        #Temporal memory map
+        #Temporal memory map 
         elif dir >= 20000 and dir < 21000:
-            self.memTemp.int[dir - 20000] = new_val
+            self.memTemp[-1].int[dir - 20000] = new_val
         elif dir >= 21000 and dir < 22000:
-            self.memTemp.float[dir - 21000] = new_val
+            self.memTemp[-1].float[dir - 21000] = new_val
         elif dir >= 22000 and dir < 23000:
-            self.memTemp.char[dir - 22000] = new_val
+            self.memTemp[-1].char[dir - 22000] = new_val
         elif dir >= 23000 and dir < 24000:
-            self.memTemp.bool[dir - 23000] = new_val
+            self.memTemp[-1].bool[dir - 23000] = new_val
         elif dir >= 24000 and dir < 25000:
-            self.memTemp.compound[dir - 24000] = new_val
+            self.memTemp[-1].compound[dir - 24000] = new_val
         elif dir >= 29000 and dir < 30000:
-            self.memTemp.pointers[dir - 29000] = new_val
+            self.memTemp[-1].pointers[dir - 29000] = new_val
