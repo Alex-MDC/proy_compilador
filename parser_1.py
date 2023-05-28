@@ -38,7 +38,7 @@ def p_program(p):
     quadruples.quadruples.append(quad)
 
     # Execute code in virtual machine
-    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal,memTemporal)
+    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
 
     functionTable.print_function_table()
     functionTable.delete_function_table()
