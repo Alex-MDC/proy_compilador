@@ -49,11 +49,11 @@ class FunctionTable:
         else:
             return None
     
-    def add_param_to_function(self, func_name, param):
+    def add_param_types_to_function(self, func_name, param):
         func = self.get_function(func_name)
         func['params_type'].append(param)
     
-    def get_params_of_function(self, func_name):
+    def get_params_types_of_function(self, func_name):
         func = self.get_function(func_name)
 
         if func:

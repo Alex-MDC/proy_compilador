@@ -9,11 +9,14 @@ class VirtualMachine:
         self.executeVM()
     
     def executeVM(self):
-        for i, quad in enumerate(self.quadruples):
-            op_code = quad[0]
-            left_op_dir = quad[1]
-            right_op_dir = quad[2]
-            store_in_dir = quad[3]
+        instruction_pointer = 0
+        migaja = 0
+
+        while instruction_pointer < len(self.quadruples) - 1:
+            op_code = self.quadruples[instruction_pointer][0]
+            left_op_dir = self.quadruples[instruction_pointer][1]
+            right_op_dir = self.quadruples[instruction_pointer][2]
+            store_in_dir = self.quadruples[instruction_pointer][3]
 
             if op_code == 'PRINT':
                 if isinstance(store_in_dir, str):
@@ -21,77 +24,155 @@ class VirtualMachine:
                 else:
                     result = self.getValueInMemory(store_in_dir)
                     print(result)
+                instruction_pointer += 1
 
             elif op_code == '=':
                 left_op = self.getValueInMemory(left_op_dir)
                 self.assignValue(store_in_dir, left_op)
 
+                instruction_pointer += 1
+
             elif op_code == '+':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
                 result = left_op + right_op
-                self.assignValue(store_in_dir,result)
+                self.assignValue(store_in_dir, result)
+
+                instruction_pointer += 1
 
             elif op_code == '*':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
                 result = left_op * right_op
-                self.assignValue(store_in_dir,result)
+                self.assignValue(store_in_dir, result)
+
+                instruction_pointer += 1
 
             elif op_code == '-':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
                 result = left_op - right_op
-                self.assignValue(store_in_dir,result)
+                self.assignValue(store_in_dir, result)
+
+                instruction_pointer += 1
 
             elif op_code == '/':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
                 result = left_op / right_op
-                self.assignValue(store_in_dir,result)
+                self.assignValue(store_in_dir, result)
+
+                instruction_pointer += 1
 
             elif op_code == '>':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op > right_op)
+                self.assignValue(store_in_dir, left_op > right_op)
+
+                instruction_pointer += 1
 
             elif op_code == '<':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op < right_op)
+                self.assignValue(store_in_dir, left_op < right_op)
+
+                instruction_pointer += 1
 
             elif op_code == '>=':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op >= right_op)
+                self.assignValue(store_in_dir, left_op >= right_op)
+
+                instruction_pointer += 1
 
             elif op_code == '<=':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op <= right_op)
+                self.assignValue(store_in_dir, left_op <= right_op)
+
+                instruction_pointer += 1
 
             elif op_code == '==':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op == right_op)
+                self.assignValue(store_in_dir, left_op == right_op)
+
+                instruction_pointer += 1
 
             elif op_code == '<>':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op != right_op)
+                self.assignValue(store_in_dir, left_op != right_op)
+
+                instruction_pointer += 1
 
             elif op_code == 'and':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op and right_op)
+                self.assignValue(store_in_dir, left_op and right_op)
+
+                instruction_pointer += 1
 
             elif op_code == 'or':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
-                self.assignValue(store_in_dir,left_op or right_op)
-                
-    
+                self.assignValue(store_in_dir, left_op or right_op)
 
+                instruction_pointer += 1
+
+            elif op_code == 'GOTO':
+                instruction_pointer = store_in_dir
+            
+            elif op_code == 'GOTOF':
+                left_op = self.getValueInMemory(left_op_dir)
+                if left_op == False:
+                    instruction_pointer = store_in_dir
+                else:
+                    instruction_pointer += 1
+
+            elif op_code == 'GOSUB':
+                migaja = instruction_pointer + 1
+                
+                # Quadruple number where function being called starts
+                quad_no = self.functionTable.get_dirVir(store_in_dir)
+                instruction_pointer = quad_no
+
+            elif op_code == 'ENDFUNC':
+                '''
+                Function ends and we want to check that a return was seen if function's type is not void
+                IP is set to migaja (quadruple where we left off)
+                '''
+                instruction_pointer = migaja
+
+                function_type = self.functionTable.get_returnType_of_function(store_in_dir)
+
+                if function_type != 'void':
+                    # Virtual address of var with same name as function
+                    dirvir = self.functionTable.get_var_dirVir_in_function('main', store_in_dir)
+                    dirvir_value = self.getValueInMemory(dirvir)
+
+                    # Check that a return was seen => var with same name as function is not 0
+                    if dirvir_value == 0:
+                        raise KeyError("Function needs a return statement")
+            
+            elif op_code == 'RETURN':
+                '''
+                Return sets the variable (with same name as function's) equal to the value being returned
+                '''
+                # Virtual address of var with same name as function
+                dirvir = self.functionTable.get_var_dirVir_in_function('main', left_op_dir)
+                # Value that needs to be assigned to var above
+                store_dir_value = self.getValueInMemory(store_in_dir)
+
+                self.assignValue(dirvir, store_dir_value)
+
+                # Once a return was seen, nothing after that should execute, return directly to migaja
+                instruction_pointer = migaja
+                
+            else:
+                instruction_pointer += 1
+
+    
     def getValueInMemory(self, dir):
         # Global memory map
         if dir >= 1000 and dir < 2000:
@@ -164,5 +245,3 @@ class VirtualMachine:
             self.memTemp.compound[dir - 24000] = new_val
         elif dir >= 29000 and dir < 30000:
             self.memTemp.pointers[dir - 29000] = new_val
-
-        
