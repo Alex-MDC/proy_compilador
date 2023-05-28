@@ -25,7 +25,7 @@ memTemporal = MemoryMap(20000, 21000, 22000, 23000,24000,29000)
 memConstants = MemoryMap(25000, 26000, 27000, 500,600,None, True)
 #Pointers = 29,000 ... 30,000
 
-# TODO Set virtual address for functions (?)
+# TODO
 # Convert 'signos' into numerical codes 
 # Delete function's vars table whenever we are out of that scope
 
@@ -244,7 +244,8 @@ def p_function(p):
     function : function2 ID set_scope LPAREN function3 RPAREN dv_func block
     '''
     # Add quad ENDFUNC
-    quad = ['ENDFUNC', '', '', '']
+    function_name = curr.getScope()
+    quad = ['ENDFUNC', '', '', function_name]
     quadruples.quadruples.append(quad)
 
     # We are out of the current scope
@@ -386,7 +387,7 @@ def p_parameter(p):
     if virtual_address is None:
         raise yacc.YaccError(f"Stack overflow!")
     
-    # Add var and check if variable is not already declared within function
+    # Add param as var and check if param is not already declared within function
     if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1], virtual_address) is None):
         raise yacc.YaccError(f"Variable {p[2]} already declared")
 
@@ -397,7 +398,7 @@ def p_parameter(p):
 
 def p_add_parameter(p):
     "add_parameter :"
-    functionTable.add_param_to_function(curr.getScope(), p[-2])
+    functionTable.add_param_types_to_function(curr.getScope(), p[-2])
 
 def p_parameter2(p):
     '''
@@ -837,7 +838,7 @@ def p_verify_function_exists(p):
         raise yacc.YaccError(f"Function {p[-1]} not declared")
 
     # Get params' table of function being called
-    curr.setParamListCALL(functionTable.get_params_of_function(p[-1]))
+    curr.setParamTypesList(functionTable.get_params_types_of_function(p[-1]))
     
     # Generate ERA quad
     quad = ['ERA', '', '', p[-1]]
@@ -851,7 +852,7 @@ def p_call2(p):
     call2 : LPAREN call4 RPAREN
     '''
     # Verify parameter counter matches the parameter list's size
-    param_list = curr.getParamListCALL()
+    param_list = curr.getParamTypesList()
     if (curr.getParamCounter() != len(param_list)):
         raise yacc.YaccError('Arguments number do not match')
 
@@ -873,7 +874,7 @@ def p_verify_argument(p):
     expression = quadruples.stack_operands.pop()
 
     # Verify argument type against parameter K in parameter table
-    expected_arg_type = curr.getSingleParamCALL(curr.getParamCounter())
+    expected_arg_type = curr.getParamTypeInIndex(curr.getParamCounter())
     
     if (expected_arg_type is None):
         raise yacc.YaccError('Too many arguments')
@@ -941,23 +942,26 @@ def p_add_gosub(p):
     quad = ['GOSUB', '', '', p[-3]]
     quadruples.quadruples.append(quad)
 
-    # Parche de recursion / Snapshot
     temporal = 't' + str(quadruples.get_temporal_counter())
+    result_type = functionTable.get_returnType_of_function(p[-3])
 
     # Add temporal to memory map
-    virtual_address = memTemporal.addVar(temporal, result_type)
+    virtual_address_temporal = memTemporal.addVar(temporal, result_type)
 
     # Check if is in range
-    if virtual_address is None:
+    if virtual_address_temporal is None:
         raise yacc.YaccError(f"Stack overflow!")
 
-    quad = ['=', p[-3], '', virtual_address]
-    quadruples.quadruples.append(quad)
+    # Virtual address of var with same name as function
+    virtual_address_of_var = functionTable.get_var_dirVir_in_function('main', p[-3])
+    
+    # Parche de recursion / Snapshot
+    if result_type != 'void':
+        quad = ['=', virtual_address_of_var, '', virtual_address_temporal]
+        quadruples.quadruples.append(quad)
 
-    # This returns the type of main, not the function type
-    result_type = functionTable.get_returnType_of_function(p[-3])
     quadruples.stack_types.append(result_type)
-    quadruples.stack_operands.append(virtual_address)
+    quadruples.stack_operands.append(virtual_address_temporal)
 
     # Increment temporal counter
     quadruples.increment_counter()
@@ -1087,7 +1091,8 @@ def p_ret_ver_supexp(p):
     if ( quadruples.stack_types.pop() != expected_return_type):
         raise yacc.YaccError("return-type mismatch")
     
-    quad = ["RETURN",'','',quadruples.stack_operands.pop()]
+    func_name = curr.getScope()
+    quad = ["RETURN", func_name, '', quadruples.stack_operands.pop()]
     quadruples.quadruples.append(quad)
 
 #-----loop

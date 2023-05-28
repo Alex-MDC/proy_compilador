@@ -6,7 +6,7 @@ class Context:
         
         # For <call> diagram
         self.param_counter = []
-        self.param_list = []
+        self.param_types_list = []
 
         # Operational codes
         self.op_codes = {
@@ -59,15 +59,16 @@ class Context:
     def resetParamCounter(self):
         self.param_counter.pop()
 
-    def setParamListCALL(self, param_list):
-        self.param_list = param_list
+    # Param's types
+    def setParamTypesList(self, param_types_list):
+        self.param_types_list = param_types_list
     
-    def getParamListCALL(self):
-        return self.param_list
+    def getParamTypesList(self):
+        return self.param_types_list
     
-    def getSingleParamCALL(self, index):
+    def getParamTypeInIndex(self, index):
         # Validate index is inbounds
-        if index >= len(self.param_list):
+        if index >= len(self.param_types_list):
             return None
         
-        return self.param_list[index]
+        return self.param_types_list[index]
