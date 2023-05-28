@@ -249,6 +249,8 @@ def p_function(p):
     quad = ['ENDFUNC', '', '', function_name]
     quadruples.quadruples.append(quad)
 
+    memLocal.resetMemoryMap()
+
     # We are out of the current scope
     curr.popScope()
 
@@ -272,7 +274,7 @@ def p_function3(p):
 def p_set_scope(p):
     "set_scope :"
     
-    #save potential return type if function is not void
+    # Save potential return type if function is not void
     if(p[-2] != "void"):
         ret_type = p[-2]
         varName = p[-1]
@@ -284,9 +286,12 @@ def p_set_scope(p):
         if virtual_address is None:
             raise yacc.YaccError(f"Stack overflow!")
 
-        #save return type as a duplicate var with the name of the function
+        # Save return type as a duplicate var with the name of the function
         if (functionTable.add_var_to_function("main", varName, ret_type, virtual_address) is None):
             raise yacc.YaccError(f"Variable {p[-1]} already declared")
+        
+        # Update function's resources for var declared above
+        functionTable.set_resources_to_function('main', 'var ' + ret_type)
         
     # Set current scope
     curr.setScope(p[-1])
