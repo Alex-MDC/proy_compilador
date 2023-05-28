@@ -8,3 +8,5 @@ var int a,b,c,d main {while(a>b*c) {a=a-d; print(a);} b=c+a;  }
 var int a,b,c,d main {a=b+c;  while(a>b*c) {a=b-c; b=b+d;} c=a+b;  }   
 void random() var float x {} float algo() var int p {return 5.0+p} main {} 
 var int A,B,C,D var float Z int suma() { A=3; print(5,A,"HOLA"); } main{}
+var int A,B,C,D var float Z int suma() { print("HOLA"); return 1 } main{print(suma());} 
+var int A,B,C,D var float Z int suma() { print(5+21,"HOLA"); return 1 } main{print(suma());}

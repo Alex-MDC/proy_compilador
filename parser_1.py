@@ -37,6 +37,7 @@ def p_program(p):
     quad = ['ENDPROG', '', '', '']
     quadruples.quadruples.append(quad)
 
+    
     # Execute code in virtual machine
     VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
 
@@ -294,7 +295,7 @@ def p_set_scope(p):
     quadruples.reset_temporal_counter()
 
     # Reset memory map
-    #memTemporal.resetMemoryMap() #  TODO -- dont reset temp; works as glob
+    memTemporal.resetMemoryMap()
 
     # Add function to function table
     if (functionTable.add_function(p[-1], p[-2]) is None):
@@ -1023,7 +1024,7 @@ def p_solve_pending_jump_main(p):
     quadruples.reset_temporal_counter()
 
     # Reset memory map
-    #memTemporal.resetMemoryMap() #  TODO no mem resets
+    memTemporal.resetMemoryMap()
 
 def p_solve_pending_jump(p):
     "solve_pending_jump :"
