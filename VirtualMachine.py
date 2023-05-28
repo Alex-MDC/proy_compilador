@@ -8,14 +8,49 @@ class VirtualMachine:
         self.memConstants = memConstants
         self.memTemp = []
         self.currMem = []
-
+        self.initMainMem()
         self.executeVM()
     
+    def initMainMem(self):
+        self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
+        self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
+        resources = self.functionTable.get_resources_in_function('main')
+        
+        for i in range(len(resources)):
+            if i == 4:
+                for x in range(resources[i]):
+                    self.memTemp[-1].addVar('defaultName','int')
+            elif i == 5:
+                for x in range(resources[i]):
+                    self.memTemp[-1].addVar('defaultName','float')
+            elif i == 6:
+                for x in range(resources[i]):
+                    self.memTemp[-1].addVar('defaultName','bool')
+            elif i == 7:
+                for x in range(resources[i]):
+                    self.memTemp[-1].addVar('defaultName','char')
+            elif i == 0:
+                for x in range(resources[i]):
+                    self.currMem[-1].addVar('defaultName','int')
+            elif i == 1:
+                for x in range(resources[i]):
+                    self.currMem[-1].addVar('defaultName','float')
+            elif i == 2:
+                for x in range(resources[i]):
+                    self.currMem[-1].addVar('defaultName','bool')
+            elif i == 3:
+                for x in range(resources[i]):
+                    self.currMem[-1].addVar('defaultName','char')
+
+            
+                
     def executeVM(self):
         instruction_pointer = 0
         migaja = 0
 
         while instruction_pointer < len(self.quadruples) - 1:
+            # print("CURRENT QUAD")
+            # print(self.quadruples[instruction_pointer])
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
@@ -31,6 +66,7 @@ class VirtualMachine:
 
             elif op_code == '=':
                 left_op = self.getValueInMemory(left_op_dir)
+                # print(self.memTemp)
                 self.assignValue(store_in_dir, left_op)
 
                 instruction_pointer += 1
@@ -145,6 +181,7 @@ class VirtualMachine:
                 Function ends and we want to check that a return was seen if function's type is not void
                 IP is set to migaja (quadruple where we left off)
                 '''
+                #nothing should execute after ENDFUNC, we return to the breadcrumb now
                 instruction_pointer = migaja
 
                 function_type = self.functionTable.get_returnType_of_function(store_in_dir)
@@ -168,13 +205,14 @@ class VirtualMachine:
                 '''
                 # Virtual address of var with same name as function
                 dirvir = self.functionTable.get_var_dirVir_in_function('main', left_op_dir)
+
                 # Value that needs to be assigned to var above
                 store_dir_value = self.getValueInMemory(store_in_dir)
 
                 self.assignValue(dirvir, store_dir_value)
 
-                # Once a return was seen, nothing after that should execute, return directly to migaja
-                instruction_pointer = migaja
+                # Once a return was seen, the ENDFUNC should follow so nothing else executes. raise IP
+                instruction_pointer += 1
 
             elif op_code == "ERA":
                 '''
@@ -183,7 +221,38 @@ class VirtualMachine:
                 '''
                 self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
                 self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
-			    
+                #find the function and allocate memory based on resources
+                resources = self.functionTable.get_resources_in_function(store_in_dir)
+                
+                for i in range(len(resources)):
+                    if i == 4:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','int')
+                    elif i == 5:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','float')
+                    elif i == 6:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','bool')
+                    elif i == 7:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','char')
+                    elif i == 0:
+                        for x in range(resources[i]):
+                            self.currMem[-1].addVar('defaultName','int')
+                    elif i == 1:
+                        for x in range(resources[i]):
+                            self.currMem[-1].addVar('defaultName','float')
+                    elif i == 2:
+                        for x in range(resources[i]):
+                            self.currMem[-1].addVar('defaultName','bool')
+                    elif i == 3:
+                        for x in range(resources[i]):
+                            self.currMem[-1].addVar('defaultName','char')
+                
+                #self.currMem[-1].printMemoryMap()
+
+                instruction_pointer +=1
             
                 
             else:

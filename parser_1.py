@@ -37,6 +37,7 @@ def p_program(p):
     quad = ['ENDPROG', '', '', '']
     quadruples.quadruples.append(quad)
 
+    
     # Execute code in virtual machine
     VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
 
