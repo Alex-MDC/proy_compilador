@@ -17,3 +17,13 @@ Avances:
 2. Up to 5th deliverable complete
 3. 6th: previous deliverables have included the following planned virtual memory design
 4. The virtual machine and in-code implementation of the memory is pending
+
+# Adv 7
+------------------
+Avances:
+1. Virtual machine
+2. Virtual Memory update, design and implementation
+3. Execution of arithmetic expressions
+4. Execution of sequential statements
+5. Conditional statement execution
+6. Recursion has been tested on a factorial and fibonacci
