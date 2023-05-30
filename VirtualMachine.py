@@ -39,6 +39,7 @@ class VirtualMachine:
         stack_migajas = []
 
         while instruction_pointer < len(self.quadruples) - 1:
+           # print("CURRENT QUAD:", self.quadruples[instruction_pointer])
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
@@ -181,7 +182,7 @@ class VirtualMachine:
                     dirvir_value = self.getValueInMemory(dirvir)
 
                     # Check that a return was seen => var with same name as function is not 0
-                    if dirvir_value == 0:
+                    if dirvir_value == None: # TODO NONE assignment
                         raise KeyError("Function needs a return statement")
                     
                 # We must delete the current working memory to use the previous one in the stack! This helps control the flow of
