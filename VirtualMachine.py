@@ -10,6 +10,7 @@ class VirtualMachine:
         # Stack of memories (temporal and local)
         self.memTemp = []
         self.currMem = []
+        self.isBetweenEraGosub = False
 
         self.initMainMem()
         self.executeVM()
@@ -38,6 +39,7 @@ class VirtualMachine:
         stack_migajas = []
 
         while instruction_pointer < len(self.quadruples) - 1:
+           # print("CURRENT QUAD:", self.quadruples[instruction_pointer])
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
@@ -162,6 +164,8 @@ class VirtualMachine:
                 quad_no = self.functionTable.get_dirVir(store_in_dir)
                 instruction_pointer = quad_no
 
+                self.isBetweenEraGosub = False
+
             elif op_code == 'ENDFUNC':
                 '''
                 Function ends and we want to check that a return was seen if function's type is not void
@@ -178,7 +182,7 @@ class VirtualMachine:
                     dirvir_value = self.getValueInMemory(dirvir)
 
                     # Check that a return was seen => var with same name as function is not 0
-                    if dirvir_value == 0:
+                    if dirvir_value == None: # TODO NONE assignment
                         raise KeyError("Function needs a return statement")
                     
                 # We must delete the current working memory to use the previous one in the stack! This helps control the flow of
@@ -238,6 +242,7 @@ class VirtualMachine:
                         for x in range(resources[i]):
                             self.memTemp[-1].addVar('defaultName','char')
 
+                self.isBetweenEraGosub = True
                 instruction_pointer +=1
             
             elif op_code == 'PARAM':
@@ -245,7 +250,10 @@ class VirtualMachine:
                 Set PARAM equal to the expression sent
                 '''
                 left_op = self.getValueInMemory(left_op_dir)
+
+                self.isBetweenEraGosub = False
                 self.assignValue(store_in_dir, left_op)
+                self.isBetweenEraGosub = True
                 
                 instruction_pointer += 1
             
@@ -254,6 +262,8 @@ class VirtualMachine:
 
     
     def getValueInMemory(self, dir):
+        index = -2 if self.isBetweenEraGosub else -1
+
         # Global memory map
         if dir >= 1000 and dir < 2000:
             return int(self.memGlobal.int[dir - 1000])
@@ -268,17 +278,17 @@ class VirtualMachine:
         
         #Temporal memory map 
         elif dir >= 20000 and dir < 21000:
-            return int(self.memTemp[-1].int[dir - 20000])
+            return int(self.memTemp[index].int[dir - 20000])
         elif dir >= 21000 and dir < 22000:
-            return float(self.memTemp[-1].float[dir - 21000])
+            return float(self.memTemp[index].float[dir - 21000])
         elif dir >= 22000 and dir < 23000:
-            return self.memTemp[-1].char[dir - 22000]
+            return self.memTemp[index].char[dir - 22000]
         elif dir >= 23000 and dir < 24000:
-            return self.memTemp[-1].bool[dir - 23000]
+            return self.memTemp[index].bool[dir - 23000]
         elif dir >= 24000 and dir < 25000:
-            return self.memTemp[-1].compound[dir - 24000]
+            return self.memTemp[index].compound[dir - 24000]
         elif dir >= 29000 and dir < 30000:
-            return self.memTemp[-1].pointers[dir - 29000]
+            return self.memTemp[index].pointers[dir - 29000]
 
         # Constant's memory map
         elif dir >= 25000 and dir < 26000:
@@ -292,18 +302,20 @@ class VirtualMachine:
 
         # Local memory map 
         elif dir >= 15000 and dir < 16000:
-            return int(self.currMem[-1].int[dir - 15000])
+            return int(self.currMem[index].int[dir - 15000])
         elif dir >= 16000 and dir < 17000:
-            return float(self.currMem[-1].float[dir - 16000])
+            return float(self.currMem[index].float[dir - 16000])
         elif dir >= 17000 and dir < 18000:
-            return self.currMem[-1].char[dir - 17000]
+            return self.currMem[index].char[dir - 17000]
         elif dir >= 18000 and dir < 19000:
-            return self.currMem[-1].bool[dir - 18000]
+            return self.currMem[index].bool[dir - 18000]
         elif dir >= 19000 and dir < 20000:
-            return self.currMem[-1].compound[dir - 19000]
+            return self.currMem[index].compound[dir - 19000]
 
 
     def assignValue(self, dir, new_val):
+        index = -2 if self.isBetweenEraGosub else -1
+        
         # Global memory map
         if dir >= 1000 and dir < 2000:
             self.memGlobal.int[dir - 1000] = new_val
@@ -326,26 +338,26 @@ class VirtualMachine:
 
         #Temporal memory map 
         elif dir >= 20000 and dir < 21000:
-            self.memTemp[-1].int[dir - 20000] = new_val
+            self.memTemp[index].int[dir - 20000] = new_val
         elif dir >= 21000 and dir < 22000:
-            self.memTemp[-1].float[dir - 21000] = new_val
+            self.memTemp[index].float[dir - 21000] = new_val
         elif dir >= 22000 and dir < 23000:
-            self.memTemp[-1].char[dir - 22000] = new_val
+            self.memTemp[index].char[dir - 22000] = new_val
         elif dir >= 23000 and dir < 24000:
-            self.memTemp[-1].bool[dir - 23000] = new_val
+            self.memTemp[index].bool[dir - 23000] = new_val
         elif dir >= 24000 and dir < 25000:
-            self.memTemp[-1].compound[dir - 24000] = new_val
+            self.memTemp[index].compound[dir - 24000] = new_val
         elif dir >= 29000 and dir < 30000:
-            self.memTemp[-1].pointers[dir - 29000] = new_val
+            self.memTemp[index].pointers[dir - 29000] = new_val
 
         # Local memory map 
         elif dir >= 15000 and dir < 16000:
-            self.currMem[-1].int[dir - 15000] = new_val
+            self.currMem[index].int[dir - 15000] = new_val
         elif dir >= 16000 and dir < 17000:
-            self.currMem[-1].float[dir - 16000] = new_val
+            self.currMem[index].float[dir - 16000] = new_val
         elif dir >= 17000 and dir < 18000:
-            self.currMem[-1].char[dir - 17000] = new_val
+            self.currMem[index].char[dir - 17000] = new_val
         elif dir >= 18000 and dir < 19000:
-            self.currMem[-1].bool[dir - 18000] = new_val
+            self.currMem[index].bool[dir - 18000] = new_val
         elif dir >= 19000 and dir < 20000:
-            self.currMem[-1].compound[dir - 19000] = new_val
+            self.currMem[index].compound[dir - 19000] = new_val
