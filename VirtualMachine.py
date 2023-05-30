@@ -35,7 +35,7 @@ class VirtualMachine:
             
     def executeVM(self):
         instruction_pointer = 0
-        migaja = 0
+        stack_migajas = []
 
         while instruction_pointer < len(self.quadruples) - 1:
             op_code = self.quadruples[instruction_pointer][0]
@@ -156,7 +156,7 @@ class VirtualMachine:
                     instruction_pointer += 1
 
             elif op_code == 'GOSUB':
-                migaja = instruction_pointer + 1
+                stack_migajas.append(instruction_pointer + 1)
                 
                 # Quadruple number where function being called starts
                 quad_no = self.functionTable.get_dirVir(store_in_dir)
@@ -168,7 +168,7 @@ class VirtualMachine:
                 IP is set to migaja (quadruple where we left off)
                 '''
                 # We finished executing this function, return to the breadcrumb now
-                instruction_pointer = migaja
+                instruction_pointer = stack_migajas.pop()
 
                 function_type = self.functionTable.get_returnType_of_function(store_in_dir)
 
@@ -240,6 +240,15 @@ class VirtualMachine:
 
                 instruction_pointer +=1
             
+            elif op_code == 'PARAM':
+                '''
+                Set PARAM equal to the expression sent
+                '''
+                left_op = self.getValueInMemory(left_op_dir)
+                self.assignValue(store_in_dir, left_op)
+                
+                instruction_pointer += 1
+            
             else:
                 instruction_pointer += 1
 
@@ -281,6 +290,18 @@ class VirtualMachine:
         # elif dir >= 30000 and dir < 31000:
         #     return self.memConstants.bool[dir - 30000]
 
+        # Local memory map 
+        elif dir >= 15000 and dir < 16000:
+            return int(self.currMem[-1].int[dir - 15000])
+        elif dir >= 16000 and dir < 17000:
+            return float(self.currMem[-1].float[dir - 16000])
+        elif dir >= 17000 and dir < 18000:
+            return self.currMem[-1].char[dir - 17000]
+        elif dir >= 18000 and dir < 19000:
+            return self.currMem[-1].bool[dir - 18000]
+        elif dir >= 19000 and dir < 20000:
+            return self.currMem[-1].compound[dir - 19000]
+
 
     def assignValue(self, dir, new_val):
         # Global memory map
@@ -316,3 +337,15 @@ class VirtualMachine:
             self.memTemp[-1].compound[dir - 24000] = new_val
         elif dir >= 29000 and dir < 30000:
             self.memTemp[-1].pointers[dir - 29000] = new_val
+
+        # Local memory map 
+        elif dir >= 15000 and dir < 16000:
+            self.currMem[-1].int[dir - 15000] = new_val
+        elif dir >= 16000 and dir < 17000:
+            self.currMem[-1].float[dir - 16000] = new_val
+        elif dir >= 17000 and dir < 18000:
+            self.currMem[-1].char[dir - 17000] = new_val
+        elif dir >= 18000 and dir < 19000:
+            self.currMem[-1].bool[dir - 18000] = new_val
+        elif dir >= 19000 and dir < 20000:
+            self.currMem[-1].compound[dir - 19000] = new_val

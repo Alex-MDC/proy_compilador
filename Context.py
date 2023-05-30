@@ -7,6 +7,8 @@ class Context:
         # For <call> diagram
         self.param_counter = []
         self.param_types_list = []
+        self.param_names_list = []
+        self.function_name = ''
 
         # Operational codes
         self.op_codes = {
@@ -72,3 +74,23 @@ class Context:
             return None
         
         return self.param_types_list[index]
+    
+    # Param's names
+    def setParamNamesList(self, param_names_list):
+        self.param_names_list = param_names_list
+    
+    def getParamNamesList(self):
+        return self.param_names_list
+    
+    def getParamNameInIndex(self, index):
+        # Validate index is inbounds
+        if index >= len(self.param_names_list):
+            return None
+        
+        return self.param_names_list[index]
+    
+    def setFunctionName(self, func_name):
+        self.function_name = func_name
+
+    def getFuncionName(self):
+        return self.function_name

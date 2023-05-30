@@ -405,6 +405,7 @@ def p_parameter(p):
 def p_add_parameter(p):
     "add_parameter :"
     functionTable.add_param_types_to_function(curr.getScope(), p[-2])
+    functionTable.add_param_names_to_function(curr.getScope(), p[-1])
 
 def p_parameter2(p):
     '''
@@ -845,6 +846,8 @@ def p_verify_function_exists(p):
 
     # Get params' table of function being called
     curr.setParamTypesList(functionTable.get_params_types_of_function(p[-1]))
+    curr.setParamNamesList(functionTable.get_params_names_of_function(p[-1]))
+    curr.setFunctionName(p[-1])
     
     # Generate ERA quad
     quad = ['ERA', '', '', p[-1]]
@@ -889,7 +892,12 @@ def p_verify_argument(p):
             raise yacc.YaccError('Argument type do not match')
 
     # Add PARAM quad
-    quad = ['PARAM', expression, '', curr.getParamCounter()]
+    param_name = curr.getParamNameInIndex(curr.getParamCounter())
+
+    # Get param_name's dirvir
+    param_dirvir = functionTable.get_var_dirVir_in_function(curr.getFuncionName(), param_name)
+
+    quad = ['PARAM', expression, '', param_dirvir]
     quadruples.quadruples.append(quad)
 
     # Increment parameter counter
