@@ -17,6 +17,7 @@ class FunctionTable:
             'return_type': return_type,
             'var_table': VariableTable(),
             'params_type': [],
+            'params_names': [],
             'dirVir': None,
             'resources': [0] * 8 # [VI, VF, VB, VC, TI, TF, TB, TC]
         }
@@ -58,6 +59,18 @@ class FunctionTable:
 
         if func:
             return func['params_type']
+        else:
+            return None
+        
+    def add_param_names_to_function(self, func_name, param_name):
+        func = self.get_function(func_name)
+        func['params_names'].append(param_name)
+    
+    def get_params_names_of_function(self, func_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['params_names']
         else:
             return None
         
@@ -119,6 +132,7 @@ class FunctionTable:
             print(f"Dir Vir: {func_data['dirVir']}")
             print(f"Resources: {func_data['resources']}")
             print(f"Params list: {func_data['params_type']}")
+            print(f"Params names: {func_data['params_names']}")
             func_data['var_table'].print_var_table()
             print()
 
