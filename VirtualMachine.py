@@ -37,12 +37,17 @@ class VirtualMachine:
     def executeVM(self):
         instruction_pointer = 0
         stack_migajas = []
+        seenReturn = False
 
         while instruction_pointer < len(self.quadruples) - 1:
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
             store_in_dir = self.quadruples[instruction_pointer][3]
+
+            if seenReturn and op_code != 'ENDFUNC':
+                instruction_pointer += 1
+                continue
 
             if op_code == 'PRINT':
                 if isinstance(store_in_dir, str):
@@ -188,6 +193,8 @@ class VirtualMachine:
                 # active memory and passive memory
                 self.memTemp.pop()
                 self.currMem.pop()
+
+                seenReturn = False
             
             elif op_code == 'RETURN':
                 '''
@@ -203,6 +210,8 @@ class VirtualMachine:
 
                 # TODO: Once a return was seen, the ENDFUNC should follow but nothing else in between RETURN and ENDFUNC should execute
                 instruction_pointer += 1
+
+                seenReturn = True
 
             elif op_code == "ERA":
                 '''
