@@ -16,7 +16,7 @@ class VirtualMachine:
         self.executeVM()
     
     def initMainMem(self):
-        self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
+        self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000, 24000, 29000))
         resources = self.functionTable.get_resources_in_function('main')
         
         for i in range(len(resources)):
@@ -39,7 +39,6 @@ class VirtualMachine:
         stack_migajas = []
 
         while instruction_pointer < len(self.quadruples) - 1:
-           # print("CURRENT QUAD:", self.quadruples[instruction_pointer])
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]

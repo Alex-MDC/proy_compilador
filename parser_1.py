@@ -19,15 +19,14 @@ constantsTable = VariableTable()
 semanticCube = SemanticCube()
 
 # Memory maps
-memGlobal = MemoryMap(1000, 2000, 3000, 4000,5000)
-memLocal = MemoryMap(15000,16000,17000,18000,19000)
-memTemporal = MemoryMap(20000, 21000, 22000, 23000,24000,29000)
-memConstants = MemoryMap(25000, 26000, 27000, 500,600,None, True)
+memGlobal = MemoryMap(1000, 2000, 3000, 4000, 5000)
+memLocal = MemoryMap(15000, 16000, 17000, 18000, 19000)
+memTemporal = MemoryMap(20000, 21000, 22000, 23000, 24000, 29000)
+memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, None, True)
 #Pointers = 29,000 ... 30,000
 
 # TODO
 # Convert 'signos' into numerical codes 
-# Delete function's vars table whenever we are out of that scope
 
 def p_program(p):
     '''
@@ -37,7 +36,6 @@ def p_program(p):
     quad = ['ENDPROG', '', '', '']
     quadruples.quadruples.append(quad)
 
-    
     # Execute code in virtual machine
     VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
 
@@ -835,6 +833,9 @@ def p_call(p):
     # Pop paramCounter from stack since we have finished with all args of curr call
     curr.resetParamCounter()
 
+    # Remove fake bottom
+    quadruples.stack_operators.pop()
+
     p[0] = ('call',p[1],p[2] )
 
 def p_verify_function_exists(p):
@@ -855,6 +856,9 @@ def p_verify_function_exists(p):
 
     # Push to stack new paramCounter equal to 0
     curr.addParamCounter()
+
+    # Add fake bottom
+    quadruples.stack_operators.append('-1')
 
 def p_call2(p):
     '''
