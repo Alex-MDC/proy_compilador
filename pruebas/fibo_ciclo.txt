@@ -1,0 +1,1 @@
+int fibo(int x) var int prev2, prev1,curr,i {i=1;prev1=0;curr=1;while(i<x){prev2=prev1;prev1=curr;curr=prev2+prev1;i=i+1;} return curr} main { print(fibo(8)); }

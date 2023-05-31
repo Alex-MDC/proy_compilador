@@ -50,6 +50,30 @@ class FunctionTable:
         else:
             return None
     
+    def add_dim_to_var_in_function(self, func_name, var_name, dim_size):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['var_table'].add_dim(var_name, dim_size)
+        else:
+            return None
+    
+    def get_dim_of_var_in_function(self, func_name, var_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['var_table'].get_dim_list(var_name)
+        else:
+            return None
+    
+    def set_dirVir_of_var_in_function(self, func_name, var_name, dirvir):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['var_table'].set_var_dirVir(var_name, dirvir)
+        else:
+            return None
+    
     def add_param_types_to_function(self, func_name, param):
         func = self.get_function(func_name)
         func['params_type'].append(param)

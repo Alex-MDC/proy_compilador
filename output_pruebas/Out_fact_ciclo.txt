@@ -1,0 +1,74 @@
+5040
+Function: main  
+Return type: int
+Dir Vir: None
+Resources: [1, 0, 0, 0, 1, 0, 0, 0]
+Params list: []
+Params names: []
+fact: int 1000 []
+
+Function: fact
+Return type: int
+Dir Vir: 1
+Resources: [2, 0, 0, 0, 2, 0, 1, 0]
+Params list: ['int']
+Params names: ['x']
+x: int 15000 []
+num: int 15001 []
+
+Operators: []
+Operands: []
+Types: []
+Jumps: []
+Quadruples:
+0 ['GOTO', 'main', '', 11]
+1 ['=', 25000, '', 15001]
+2 ['>', 15000, 25001, 23000]
+3 ['GOTOF', 23000, '', 9]
+4 ['*', 15001, 15000, 20000]
+5 ['=', 20000, '', 15001]
+6 ['-', 15000, 25000, 20001]
+7 ['=', 20001, '', 15000]
+8 ['GOTO', '', '', 2]
+9 ['RETURN', 'fact', '', 15001]
+10 ['ENDFUNC', '', '', 'fact']
+11 ['ERA', '', '', 'fact']
+12 ['PARAM', 25002, '', 15000]
+13 ['GOSUB', '', '', 'fact']
+14 ['=', 1000, '', 20000]
+15 ['PRINT', '', '', 20000]
+16 ['ENDPROG', '', '', '']
+Global memory map:
+Int: [5040]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Local memory map:
+Int: []
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Temporal's memory map:
+Int: [0]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Constants' memory map:
+Int: ['1', '0', '7']
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Constant's table:
+1: int 25000 []
+0: int 25001 []
+7: int 25002 []
+('begin program', None, None, (('function', 'int', 'fact', None, '(', ('function3', ('parameter', 'int', 'x', None)), ')', (('dec_vars', 'var', ('dec_vars2', 'int', ('dec_vars4', 'num', None, None))), None)), None), 
+None, 'main')
