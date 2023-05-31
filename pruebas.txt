@@ -18,3 +18,15 @@ var int x[18], y[1][2] main { x[14] = 2; y[0][1] = 1; print(x[14] * 3 + y[0][1])
 var int x[4] void suma(int x) { print(x);  } main {x[1] = 2;  suma(x[1])}
 
 var int x[5], i main { i=0; while(i < 5) { x[i]=i; i=i+1; } i =0; while(i < 5) { print(x[i]); i=i+1;}  }
+
+var int i, j main { i=0; j=0; while(i < 5) { j=0; while(j < 5) {print(i,j);   j=j+1; } i=i+1; } }
+
+var int x[5][5], i, j main { i=0; j=0; while(i < 5) {j=0; while(j < 5) { x[i][j]=j; j=j+1; } i=i+1; } i =0; j=0; while(i < 5) { j=0; while(j < 5) { print(x[i][j]); j=j+1; } i=i+1;  }} 
+
+var int x[2][3], i, j main {x[1][2]=2; print(x[0][0]); print(x[0][1]); print(x[0][2]); print(x[1][0]); print(x[1][1]); print(x[1][2]); print(x[2][0]); print(x[2][1]);}
+
+var int x[5][5], A[8], i, j main { A[7]=3; x[3][0]=2;  print(x[A[7]][0]);  }
+
+var int x[5][5], A[8], i, j main { A[7]=3; x[3][0]=A[7]*3;  print(x[A[7]][0]);  } 
+
+var int x[5][5], A[8], i, j main { A[7]=3; x[4][0]=2;  print(x[A[7]+1][0]);  } 

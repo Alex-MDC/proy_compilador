@@ -206,6 +206,8 @@ def p_add_var(p):
         if i == 0:
             # Set virtual address of variable name
             functionTable.set_dirVir_of_var_in_function(curr.getScope(), arrayHelper.get_var_name(), virtual_address)
+    
+    arrayHelper.pop_var_name()
 
 def p_dec_vars5(p):
     '''
@@ -844,10 +846,10 @@ def p_rule_2(p):
 
     # Set dim counter to 0
     DIM = 0
-    arrayHelper.reset_dim()
+    arrayHelper.push_dim()
 
     # Push dim to stack
-    arrayHelper.push_dim(DIM)
+    arrayHelper.push_to_stack_dim(DIM)
 
     # Add fake bottom
     quadruples.stack_operators.append('-1')
@@ -876,22 +878,17 @@ def p_rule_3(p):
         if virtual_address is None:
             raise yacc.YaccError(f"Stack overflow!")
         
-        # Calculate d2 to be the right_operatod
-        d2 = arrayHelper.get_dim_in_index(arrayHelper.get_dim() + 1) + 1
+        # Calculate d2 to be the right_operator
+        d2 = arrayHelper.get_dim_in_index(arrayHelper.get_dim() + 1)
 
-        temporal = 't' + str(quadruples.get_temporal_counter())
+        # Add virtual_address_of_var as a constant
+        if (constantsTable.get_var_type(d2) == None):
+            virtual_address_constant = memConstants.addVar(d2, 'int')
+            constantsTable.add_var(d2, 'int', virtual_address_constant)
+        else:
+            virtual_address_constant = constantsTable.get_var_dirVir(d2)
 
-        # Add temporal to memory map
-        virtual_address_d2 = memTemporal.addVar(temporal, 'int')
-
-        # Update function's resources
-        functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
-
-        # Check if is in range
-        if virtual_address_d2 is None:
-            raise yacc.YaccError(f"Stack overflow!")
-
-        quad = ['*', aux, virtual_address_d2, virtual_address]
+        quad = ['*', aux, virtual_address_constant, virtual_address]
         quadruples.quadruples.append(quad)
 
         quadruples.stack_operands.append(virtual_address)
@@ -941,7 +938,7 @@ def p_variable3(p):
 def p_rule_4(p):
     "rule_4 :"
     arrayHelper.update_dim()
-    arrayHelper.update_top_dim(arrayHelper.get_dim())
+    arrayHelper.update_top_dim_stack(arrayHelper.get_dim())
 
 def p_rule_5(p):
     "rule_5 :"
@@ -980,6 +977,10 @@ def p_rule_5(p):
 
     # Add fake bottom
     quadruples.stack_operators.pop()
+
+    arrayHelper.pop_dim()
+    arrayHelper.pop_from_dim_stack()
+    arrayHelper.pop_dim_list()
 
 def p_call(p):
     '''
