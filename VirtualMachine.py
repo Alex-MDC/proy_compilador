@@ -63,6 +63,12 @@ class VirtualMachine:
 
                 instruction_pointer += 1
 
+            elif op_code =='input':
+                newVal = input(f'Enter the value for {right_op_dir} --> ')
+                self.assignValue(left_op_dir, newVal)
+
+                instruction_pointer += 1
+
             elif op_code == '+':
                 left_op = self.getValueInMemory(left_op_dir)
                 right_op = self.getValueInMemory(right_op_dir)
