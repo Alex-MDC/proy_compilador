@@ -1314,10 +1314,16 @@ def p_input(p):
     input : INPUT LPAREN variable RPAREN SEMIC
     '''
     # dynamic semantic on variable
+    #find the address of the variable, check local first, then global
+    if (functionTable.get_var_type_in_function(curr.getScope(), p[3]) != None):
+        input_var_dir_vir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[3])
+
+    elif(functionTable.get_var_type_in_function('main', p[1]) != None):
+        input_var_dir_vir = functionTable.get_var_dirVir_in_function('main', p[3])
     #generate quad
     instruction = p[1]
-    input_var = p[3]
-    quad = [instruction, input_var, ' ',' ']
+    #we send the variable name for UX when executing
+    quad = [instruction, input_var_dir_vir, p[3],' ']
     quadruples.quadruples.append(quad)
     quadruples.increment_counter()
 
