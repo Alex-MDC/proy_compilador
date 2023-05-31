@@ -1,1 +1,1 @@
-var int arr[10], f, x, i int search(int f,int n) {i=0; while(i < n) {if(f==arr[i]){return i}else{i= i+1;} return -1 } } main {x=0; while(x < 10 ) {arr[x]=x*2; x = x + 1;} print(search(4,10));}
+var int arr[10], f, x, i int search(int f,int n) {i=0; while(i < n) {if(f==arr[i]){return i} i=i+1;} return -1} main {x=0; while(x < 10 ) {arr[x]=x*2;  x = x + 1;} print(search(6,10));}
