@@ -1,0 +1,80 @@
+21
+Function: main
+Return type: int
+Dir Vir: None
+Resources: [1, 0, 0, 0, 1, 0, 0, 0]
+Params list: []
+Params names: []
+fibo: int 1000 []
+
+Function: fibo
+Return type: int
+Dir Vir: 1
+Resources: [5, 0, 0, 0, 2, 0, 1, 0]
+Params list: ['int']
+Params names: ['x']
+x: int 15000 []
+prev2: int 15001 []
+prev1: int 15002 []
+curr: int 15003 []
+i: int 15004 []
+
+Operators: []
+Operands: []
+Types: []
+Jumps: []
+Quadruples:
+0 ['GOTO', 'main', '', 15]
+1 ['=', 25000, '', 15004]
+2 ['=', 25001, '', 15002]
+3 ['=', 25000, '', 15003]
+4 ['<', 15004, 15000, 23000]
+5 ['GOTOF', 23000, '', 13]
+6 ['=', 15002, '', 15001]
+7 ['=', 15003, '', 15002]
+8 ['+', 15001, 15002, 20000]
+9 ['=', 20000, '', 15003]
+10 ['+', 15004, 25000, 20001]
+11 ['=', 20001, '', 15004]
+12 ['GOTO', '', '', 4]
+13 ['RETURN', 'fibo', '', 15003]
+14 ['ENDFUNC', '', '', 'fibo']
+15 ['ERA', '', '', 'fibo']
+16 ['PARAM', 25002, '', 15000]
+17 ['GOSUB', '', '', 'fibo']
+18 ['=', 1000, '', 20000]
+19 ['PRINT', '', '', 20000]
+20 ['ENDPROG', '', '', '']
+Global memory map:
+Int: [21]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Local memory map:
+Int: []
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Temporal's memory map:
+Int: [0]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Constants' memory map:
+Int: ['1', '0', '8']
+Float: []
+Char: []
+Bool: []
+Compound: []
+Pointers: []
+Constant's table:
+1: int 25000 []
+0: int 25001 []
+8: int 25002 []
+('begin program', None, None, (('function', 'int', 'fibo', None, '(', ('function3', ('parameter', 'int', 'x', None)), ')', (('dec_vars', 'var', ('dec_vars2', 'int', ('dec_vars4', 'prev2', None, None))), None)), None), None, 'main')
