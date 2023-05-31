@@ -50,7 +50,7 @@ class VirtualMachine:
                 continue
 
             if op_code == 'PRINT':
-                if isinstance(store_in_dir, str):
+                if isinstance(store_in_dir, str) and not store_in_dir.startswith("(") and not store_in_dir.endswith(")"):
                     print(store_in_dir)
                 else:
                     result = self.getValueInMemory(store_in_dir)
@@ -264,6 +264,14 @@ class VirtualMachine:
                 self.isBetweenEraGosub = True
                 
                 instruction_pointer += 1
+
+            elif op_code == 'VERIFY':
+                left_op = self.getValueInMemory(left_op_dir)
+                
+                if left_op < right_op_dir or left_op > store_in_dir:
+                    raise KeyError("Index out of bounds!")
+                
+                instruction_pointer += 1
             
             else:
                 instruction_pointer += 1
@@ -271,6 +279,17 @@ class VirtualMachine:
     
     def getValueInMemory(self, dir):
         index = -2 if self.isBetweenEraGosub else -1
+
+        # Check if the direction has parentheses around it
+        if isinstance(dir, str) and dir.startswith("(") and dir.endswith(")"):
+            # Remove the parentheses and get the inner direction
+            inner_dir = int(dir[1:-1])
+
+            # Perform additional lookups in the memory
+            value = self.getValueInMemory(inner_dir)
+            value = self.getValueInMemory(value)
+
+            return value
 
         # Global memory map
         if dir >= 1000 and dir < 2000:
@@ -323,7 +342,12 @@ class VirtualMachine:
 
     def assignValue(self, dir, new_val):
         index = -2 if self.isBetweenEraGosub else -1
-        
+
+        if isinstance(dir, str) and dir.startswith("(") and dir.endswith(")"):
+            # Remove the parentheses and get the inner direction
+            dir = int(dir[1:-1])
+            dir = self.getValueInMemory(dir)
+
         # Global memory map
         if dir >= 1000 and dir < 2000:
             self.memGlobal.int[dir - 1000] = new_val

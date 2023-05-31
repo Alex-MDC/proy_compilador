@@ -7,6 +7,7 @@ from VariableTable import VariableTable
 from SemanticCube import SemanticCube
 from MemoryMap import MemoryMap
 from VirtualMachine import VirtualMachine
+from Array import Array
 # --- Parser
 
 # Write functions for each grammar rule which is specified in the docstring.
@@ -17,6 +18,7 @@ functionTable = FunctionTable()
 quadruples = Quadruples()
 constantsTable = VariableTable()
 semanticCube = SemanticCube()
+arrayHelper = Array()
 
 # Memory maps
 memGlobal = MemoryMap(1000, 2000, 3000, 4000, 5000)
@@ -165,30 +167,45 @@ def p_dec_vars2(p):
 
 def p_dec_vars4(p):
     '''
-    dec_vars4 : ID add_var dec_vars6 dec_vars5
+    dec_vars4 : ID save_var_name dec_vars6 add_var dec_vars5
     '''
     p[0]=('dec_vars4',p[1],p[2],p[3])
 
-def p_add_var(p):
-    "add_var :"
-    # Add var to memory map
-    virtual_address = 0
-    if (curr.getScope() == 'main'):
-        virtual_address = memGlobal.addVar(p[-1], curr.getCurrType())
-    else:
-        virtual_address = memLocal.addVar(p[-1], curr.getCurrType())
-    
-    # Check if virtual address is in valid range
-    if virtual_address is None:
-        raise yacc.YaccError(f"Stack overflow!")
+def p_save_var_name(p):
+    "save_var_name :"
+    arrayHelper.set_var_name(p[-1])
 
     # Add var and check if variable is not already declared within current function (scope)
-    if (functionTable.add_var_to_function(curr.getScope(), p[-1], curr.getCurrType(), virtual_address) is None):
-        raise yacc.YaccError(f"Variable {p[-1]} already declared")
+    if (functionTable.add_var_to_function(curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
+        raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
 
-    # Update function's resources
-    functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
+def p_add_var(p):
+    "add_var :"
+    # Calculate size for memory map
+    dim_list = functionTable.get_dim_of_var_in_function(curr.getScope(), arrayHelper.get_var_name())
 
+    size = 1
+    for element in dim_list:
+        size *= int(element)
+
+    # Add var to memory map N times (N = size)
+    for i in range(size):
+        virtual_address = 0
+        if (curr.getScope() == 'main'):
+            virtual_address = memGlobal.addVar(arrayHelper.get_var_name(), curr.getCurrType())
+        else:
+            virtual_address = memLocal.addVar(arrayHelper.get_var_name(), curr.getCurrType())
+        
+        # Check if virtual address is in valid range
+        if virtual_address is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
+
+        if i == 0:
+            # Set virtual address of variable name
+            functionTable.set_dirVir_of_var_in_function(curr.getScope(), arrayHelper.get_var_name(), virtual_address)
 
 def p_dec_vars5(p):
     '''
@@ -202,7 +219,7 @@ def p_dec_vars5(p):
 
 def p_dec_vars6(p):
     '''
-    dec_vars6 : LBRACKET CTE_INT RBRACKET dec_vars7
+    dec_vars6 : LBRACKET CTE_INT set_dim RBRACKET dec_vars7
         | empty
     '''
     if (len(p) == 5):
@@ -212,7 +229,7 @@ def p_dec_vars6(p):
 
 def p_dec_vars7(p):
     '''
-    dec_vars7 : LBRACKET CTE_INT RBRACKET
+    dec_vars7 : LBRACKET CTE_INT set_dim RBRACKET
         | empty
     '''
     if (len(p) == 5):
@@ -221,6 +238,10 @@ def p_dec_vars7(p):
         p[0] = ('dec_vars7',p[1],p[2],p[3])
     elif (len(p) == 2):
         p[0] = p[1]
+
+def p_set_dim(p):
+    "set_dim :"
+    functionTable.add_dim_to_var_in_function(curr.getScope(), arrayHelper.get_var_name(), p[-1])
 
 def p_dec_vars3(p):
     '''
@@ -755,7 +776,7 @@ def p_factor(p):
     '''
     factor : LPAREN add_fake_bottom super_expression RPAREN remove_fake_bottom
            | var_cte 
-           | variable push_operand
+           | variable
            | call
     '''
     if (len(p) == 4):
@@ -771,9 +792,14 @@ def p_remove_fake_bottom(p):
     "remove_fake_bottom :"
     quadruples.stack_operators.pop()
 
-def p_push_operand(p):
-    "push_operand :"
-
+def p_variable(p):
+    '''
+    variable : ID rule_1 variable2
+    '''
+    p[0] = p[1]
+    
+def p_rule_1(p):
+    "rule_1 :"
     # Check var is declared locally to push it, if not, check global. if not either, error undeclared var
     if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
         dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
@@ -792,38 +818,166 @@ def p_push_operand(p):
     else :
         raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
 
-
-def p_variable(p):
-    '''
-    variable : ID variable2
-    '''
-    p[0] = p[1]
-    # Verify id exists in current scope or global scope
-    if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
-        raise yacc.YaccError(f"Variable {p[1]} is not declared")
-    
+    arrayHelper.set_var_name(p[-1])
 
 def p_variable2(p):
     '''
-    variable2 : LBRACKET exp RBRACKET variable3
+    variable2 : rule_2 LBRACKET exp RBRACKET rule_3 variable3 rule_5
        | empty
     '''
-    if (len(p) == 5):
-     #TODO verify type of p[2] exp is int
+    p[0] = p[1] 
 
-     p[0] = ('variable2',p[1],p[2],p[3],p[4])
-    else:
-        p[0] = p[1] 
+def p_rule_2(p):
+    "rule_2 :"
+    quadruples.stack_operands.pop()
+    quadruples.stack_types.pop()
+
+    # Verify variable has dimensions
+    dim_list = functionTable.get_dim_of_var_in_function(curr.getScope(), arrayHelper.get_var_name())
+    if (len(dim_list) == 0):
+        raise yacc.YaccError(f"Variable does not have any dimensions")
+    
+    # Save it in context
+    arrayHelper.set_dim_list(dim_list)
+
+    # Set dim counter to 0
+    DIM = 0
+    arrayHelper.reset_dim()
+
+    # Push dim to stack
+    arrayHelper.push_dim(DIM)
+
+    # Add fake bottom
+    quadruples.stack_operators.append('-1')
+
+def p_rule_3(p):
+    "rule_3 :"
+    # Generate verify quadruple
+    DIM = arrayHelper.get_dim()
+    limite_superior = arrayHelper.get_dim_in_index(DIM) - 1
+
+    quad = ['VERIFY', quadruples.stack_operands[-1], 0, limite_superior]
+    quadruples.quadruples.append(quad)
+
+    # If not the end of list
+    if DIM < len(arrayHelper.get_dim_list()) - 1:
+        aux = quadruples.stack_operands.pop()
+
+        # Generate quad
+        temporal = 't' + str(quadruples.get_temporal_counter())
+        
+        # Add temporal to memory map
+        result_type = quadruples.stack_types.pop()
+        virtual_address = memTemporal.addVar(temporal, result_type)
+
+        # Check if is in range
+        if virtual_address is None:
+            raise yacc.YaccError(f"Stack overflow!")
+        
+        # Calculate d2 to be the right_operatod
+        d2 = arrayHelper.get_dim_in_index(arrayHelper.get_dim() + 1) + 1
+
+        temporal = 't' + str(quadruples.get_temporal_counter())
+
+        # Add temporal to memory map
+        virtual_address_d2 = memTemporal.addVar(temporal, 'int')
+
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
+        # Check if is in range
+        if virtual_address_d2 is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        quad = ['*', aux, virtual_address_d2, virtual_address]
+        quadruples.quadruples.append(quad)
+
+        quadruples.stack_operands.append(virtual_address)
+        quadruples.stack_types.append(result_type)
+        quadruples.increment_counter()
+
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
+    if arrayHelper.get_dim() > 0:
+        aux2 = quadruples.stack_operands.pop()
+        aux1 = quadruples.stack_operands.pop()
+
+        aux2_type = quadruples.stack_types.pop()
+        aux1_type = quadruples.stack_types.pop()
+
+        # Generate quadruple
+        temporal = 't' + str(quadruples.get_temporal_counter())
+            
+        # Add temporal to memory map
+        virtual_address = memTemporal.addVar(temporal, aux1_type)
+
+        # Check if is in range
+        if virtual_address is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        quad = ['+', aux1, aux2, virtual_address]
+        quadruples.quadruples.append(quad)
+
+        quadruples.stack_operands.append(virtual_address)
+        quadruples.stack_types.append(aux1_type)
+        quadruples.increment_counter()
+
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'temp ' + aux1_type)  
 
 def p_variable3(p):
     '''
-    variable3 : LBRACKET exp RBRACKET
+    variable3 : rule_4 LBRACKET exp rule_3 RBRACKET
        | empty
     '''
     if (len(p) == 4):
      p[0] = ('variable3',p[1],p[2],p[3])
     else:
         p[0] = p[1] 
+
+def p_rule_4(p):
+    "rule_4 :"
+    arrayHelper.update_dim()
+    arrayHelper.update_top_dim(arrayHelper.get_dim())
+
+def p_rule_5(p):
+    "rule_5 :"
+    aux = quadruples.stack_operands.pop()
+
+    # Generate quadruple
+    temporal = 't' + str(quadruples.get_temporal_counter())
+        
+    # Add temporal to memory map
+    result_type = quadruples.stack_types.pop()
+    virtual_address = memTemporal.addVar(temporal, result_type)
+
+    # Check if is in range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+
+    # Example: 1001
+    virtual_address_of_var = functionTable.get_var_dirVir_in_function(curr.getScope(), arrayHelper.get_var_name())
+
+    # Add virtual_address_of_var as a constant
+    if (constantsTable.get_var_type(virtual_address_of_var) == None):
+        virtual_address_constant = memConstants.addVar(virtual_address_of_var, 'int')
+        constantsTable.add_var(virtual_address_of_var, 'int', virtual_address_constant)
+    else:
+        virtual_address_constant = constantsTable.get_var_dirVir(virtual_address_of_var)
+
+    quad = ['+', aux, virtual_address_constant, virtual_address]
+    quadruples.quadruples.append(quad)
+
+    quadruples.stack_operands.append(f"({virtual_address})")
+    quadruples.stack_types.append(result_type)
+    quadruples.increment_counter()
+
+    # Update function's resources
+    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+
+    # Add fake bottom
+    quadruples.stack_operators.pop()
 
 def p_call(p):
     '''
@@ -1095,7 +1249,6 @@ def p_return(p):
     if(functionTable.get_var_type_in_function('main',curr.getScope() )=="void"):
         raise yacc.YaccError("Error, void function should not have a return statement")
     
-
     p[0] = ('return',p[1],p[2])
     
 def p_ret_ver_supexp(p):
@@ -1165,25 +1318,28 @@ def p_input(p):
 
 def p_arr_assign(p):
     '''
-    arr_assign : ID arr_assign1 EQUALS expression SEMIC
+    arr_assign : variable EQUALS expression SEMIC
     '''
-    p[0] = ('arr_assign',p[1],p[2],p[3],p[4],p[5])
+    # Verify id exists in current scope or global scope
+    if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
+        raise yacc.YaccError(f"Variable {p[1]} is not declared")
 
-def p_arr_assign1(p):
-    '''
-    arr_assign1 : LBRACKET exp RBRACKET arr_assign2
-    '''
-    p[0] = ('arr_assign1',p[1],p[2],p[3],p[4])
+    # Generate quad
+    operator = p[2]
+    left_operand = quadruples.stack_operands.pop()
 
-def p_arr_assign2(p):
-    '''
-    arr_assign2 : LBRACKET exp RBRACKET 
-        | empty
-    '''
-    if (len(p) == 4):
-        p[0] = ('arr_assign2',p[1],p[2],p[3])
+    assignee_operand = quadruples.stack_operands.pop()
+    type = quadruples.stack_types.pop()
+
+    # Verify types are same
+    if(type == quadruples.stack_types.pop()):
+        quad = [operator, left_operand, '', assignee_operand]
+        # By now, these two pops have erased the latest remaining operand and type
+        quadruples.quadruples.append(quad)
     else:
-        p[0] = ('arr_assign2',p[1])
+        raise yacc.YaccError(f"Type mismatch on assignment!")
+    
+    p[0] = ('arr_assign',p[1],p[2],p[3],p[4])
 
 def p_empty(p):
     'empty :'
