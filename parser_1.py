@@ -799,11 +799,14 @@ def p_variable(p):
     variable : ID rule_1 variable2
     '''
     arrayHelper.pop_var_name()
+    arrayHelper.pop_dim_list()
 
     p[0] = p[1]
     
 def p_rule_1(p):
     "rule_1 :"
+    arrayHelper.set_var_name(p[-1])
+
     # Check var is declared locally to push it, if not, check global. if not either, error undeclared var
     if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
         dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
@@ -812,6 +815,8 @@ def p_rule_1(p):
         quadruples.stack_operands.append(dirVir)
         quadruples.stack_types.append(type)
 
+        arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function(curr.getScope(), p[-1]))
+
     elif (functionTable.get_var_type_in_function('main', p[-1]) != None):
         dirVir = functionTable.get_var_dirVir_in_function('main', p[-1])
         type = functionTable.get_var_type_in_function('main', p[-1])
@@ -819,10 +824,10 @@ def p_rule_1(p):
         quadruples.stack_operands.append(dirVir)
         quadruples.stack_types.append(type)
 
+        arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function('main', p[-1]))
+
     else :
         raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
-
-    arrayHelper.set_var_name(p[-1])
 
 def p_variable2(p):
     '''
@@ -837,12 +842,8 @@ def p_rule_2(p):
     quadruples.stack_types.pop()
 
     # Verify variable has dimensions
-    dim_list = functionTable.get_dim_of_var_in_function(curr.getScope(), arrayHelper.get_var_name())
-    if (len(dim_list) == 0):
+    if (len(arrayHelper.get_dim_list()) == 0):
         raise yacc.YaccError(f"Variable does not have any dimensions")
-    
-    # Save it in context
-    arrayHelper.set_dim_list(dim_list)
 
     # Set dim counter to 0
     DIM = 0
@@ -955,8 +956,12 @@ def p_rule_5(p):
     if virtual_address is None:
         raise yacc.YaccError(f"Stack overflow!")
 
-    # Example: 1001
-    virtual_address_of_var = functionTable.get_var_dirVir_in_function(curr.getScope(), arrayHelper.get_var_name())
+    # Look for var in both global and local scope TODO
+    if (functionTable.get_var_type_in_function(curr.getScope(), arrayHelper.get_var_name()) != None):
+        virtual_address_of_var = functionTable.get_var_dirVir_in_function(curr.getScope(), arrayHelper.get_var_name())
+
+    elif (functionTable.get_var_type_in_function('main', arrayHelper.get_var_name()) != None):
+        virtual_address_of_var = functionTable.get_var_dirVir_in_function('main', arrayHelper.get_var_name())
 
     # Add virtual_address_of_var as a constant
     if (constantsTable.get_var_type(virtual_address_of_var) == None):
@@ -980,7 +985,6 @@ def p_rule_5(p):
 
     arrayHelper.pop_dim()
     arrayHelper.pop_from_dim_stack()
-    arrayHelper.pop_dim_list()
 
 def p_call(p):
     '''
