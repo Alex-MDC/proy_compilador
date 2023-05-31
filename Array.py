@@ -1,16 +1,19 @@
 class Array:
     def __init__(self):
-        self.var_name = ''
+        self.var_name = []
 
         self.stack_dim = []
         self.DIM = 0
         self.dim_list = []
     
     def set_var_name(self, name):
-        self.var_name = name
+        self.var_name.append(name)
     
     def get_var_name(self):
-        return self.var_name
+        return self.var_name[-1]
+    
+    def pop_var_name(self):
+        self.var_name.pop()
     
     def push_dim(self, dim):
         self.stack_dim.append(dim)

@@ -14,3 +14,7 @@ var int A,B,C,D var float Z int suma() { print(5+21,"HOLA"); return 1 } main{pri
 int fibo(int x) { if(x < 2) {  return x } else { return (fibo(x-1)) + (fibo (x-2))}  } main { print(fibo(8)); }
 
 var int x[18], y[1][2] main { x[14] = 2; y[0][1] = 1; print(x[14] * 3 + y[0][1]); } 
+
+var int x[4] void suma(int x) { print(x);  } main {x[1] = 2;  suma(x[1])}
+
+var int x[5], i main { i=0; while(i < 5) { x[i]=i; i=i+1; } i =0; while(i < 5) { print(x[i]); i=i+1;}  }

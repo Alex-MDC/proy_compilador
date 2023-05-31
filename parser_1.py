@@ -796,6 +796,8 @@ def p_variable(p):
     '''
     variable : ID rule_1 variable2
     '''
+    arrayHelper.pop_var_name()
+
     p[0] = p[1]
     
 def p_rule_1(p):
