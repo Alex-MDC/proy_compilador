@@ -50,11 +50,13 @@ class VirtualMachine:
                 continue
 
             if op_code == 'PRINT':
-                if isinstance(store_in_dir, str) and not store_in_dir.startswith("(") and not store_in_dir.endswith(")"):
-                    print(store_in_dir)
+                if store_in_dir == 'endl':
+                    print('')
+                elif isinstance(store_in_dir, str) and not store_in_dir.startswith("(") and not store_in_dir.endswith(")"):
+                    print(store_in_dir, end=' ')
                 else:
                     result = self.getValueInMemory(store_in_dir)
-                    print(result)
+                    print(result, end=' ')
                 instruction_pointer += 1
 
             elif op_code == '=':

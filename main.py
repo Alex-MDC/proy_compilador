@@ -234,7 +234,8 @@ reserved = {
     "False": "FALSE",
     "and": "AND",
     "or": "OR",
-    "while": "WHILE"
+    "while": "WHILE",
+    "endl": "ENDLINE"
 }
 
 # All tokens must be named in advance.
