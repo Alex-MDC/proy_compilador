@@ -16,7 +16,7 @@ class VirtualMachine:
         self.executeVM()
     
     def initMainMem(self):
-        self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000, 24000, 29000))
+        self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000, 24000))
         resources = self.functionTable.get_resources_in_function('main')
         
         for i in range(len(resources)):
@@ -226,7 +226,7 @@ class VirtualMachine:
                 Creates memory by pushing an instance of "current" working memory and a temporal instance as well.
                 The stacking of these resolves the active memory and "sleeping" memory
                 '''
-                self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000,29000))
+                self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000))
                 self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
 
                 # Find the function and allocate memory based on resources
@@ -322,8 +322,6 @@ class VirtualMachine:
             return self.memTemp[index].bool[dir - 23000]
         elif dir >= 24000 and dir < 25000:
             return self.memTemp[index].compound[dir - 24000]
-        elif dir >= 29000 and dir < 30000:
-            return self.memTemp[index].pointers[dir - 29000]
 
         # Constant's memory map
         elif dir >= 25000 and dir < 26000:
@@ -387,8 +385,6 @@ class VirtualMachine:
             self.memTemp[index].bool[dir - 23000] = new_val
         elif dir >= 24000 and dir < 25000:
             self.memTemp[index].compound[dir - 24000] = new_val
-        elif dir >= 29000 and dir < 30000:
-            self.memTemp[index].pointers[dir - 29000] = new_val
 
         # Local memory map 
         elif dir >= 15000 and dir < 16000:
