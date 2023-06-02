@@ -1221,6 +1221,7 @@ def p_writing2(p):
     '''
     writing2 : CTE_STR push_str_operand generate_quad writing3
             | super_expression generate_quad writing3
+            | ENDLINE push_str_operand generate_quad writing3
     '''
     p[0] = ('writing2',p[1])
 
