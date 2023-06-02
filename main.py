@@ -204,11 +204,6 @@
 #  <input>     : INPUT ( variable ) ;
 # ------------------------------
 #  <arr_assign>    : ID arr_assign1 = expression ;
-# 
-#  <arr_assign1>   : [ exp ] arr_assign2
-# 
-#  <arr_assign2>   : [ exp ] 
-#                  | empty
 #
 # -----------------------------------------------------------------------------
 

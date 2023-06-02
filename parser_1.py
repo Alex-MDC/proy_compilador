@@ -29,6 +29,7 @@ memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, None, True)
 
 # TODO
 # Convert 'signos' into numerical codes 
+# Delete memories after each execution
 
 def p_program(p):
     '''
@@ -270,6 +271,7 @@ def p_function(p):
     quad = ['ENDFUNC', '', '', function_name]
     quadruples.quadruples.append(quad)
 
+    # We are out of that scope, we delete local memory map
     memLocal.resetMemoryMap()
 
     # We are out of the current scope
@@ -453,7 +455,7 @@ def p_var_cte(p):
 
 def p_add_constant_int(p):
     "add_constant_int :"
-    #check if constant already declared
+    # If constant is not declared, we add it, else: we use the one currently stored
     if (constantsTable.get_var_type(p[-1]) == None):
         # Add to constants' memory map 
         virtual_address = memConstants.addVar(p[-1], 'int')
@@ -807,7 +809,7 @@ def p_rule_1(p):
     "rule_1 :"
     arrayHelper.set_var_name(p[-1])
 
-    # Check var is declared locally to push it, if not, check global. if not either, error undeclared var
+    # Add var to operands' stack. Check var is declared locally, if not, check global. If not either, error undeclared var
     if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
         dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
         type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
