@@ -1,11 +1,10 @@
 class MemoryMap:
-    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound,startDirPointers = None, isConstant = False):
+    def __init__(self, startDirInt, startDirFloat, startDirChar, startDirBool, startDirCompound, isConstant = False):
         self.int = []
         self.float = []
         self.char = []
         self.bool = []
         self.compound = []
-        self.pointers = []
         self.isConstant = isConstant
 
         self.startDirInt = startDirInt
@@ -13,8 +12,6 @@ class MemoryMap:
         self.startDirChar = startDirChar
         self.startDirBool = startDirBool
         self.startDirCompound = startDirCompound
-        self.startDirPointers = startDirPointers
-        #TODO adding of pointers
 
     def addVar(self, var_name, var_type):
         virtual_address = 0
@@ -68,7 +65,6 @@ class MemoryMap:
         self.char.clear()
         self.bool.clear()
         self.compound.clear()
-        self.pointers.clear()
 
     def printMemoryMap(self):
         print(f"Int: {self.int}")
@@ -76,4 +72,3 @@ class MemoryMap:
         print(f"Char: {self.char}")
         print(f"Bool: {self.bool}")
         print(f"Compound: {self.compound}")
-        print(f"Pointers: {self.pointers}")

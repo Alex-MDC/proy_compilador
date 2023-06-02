@@ -23,12 +23,10 @@ arrayHelper = Array()
 # Memory maps
 memGlobal = MemoryMap(1000, 2000, 3000, 4000, 5000)
 memLocal = MemoryMap(15000, 16000, 17000, 18000, 19000)
-memTemporal = MemoryMap(20000, 21000, 22000, 23000, 24000, 29000)
-memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, None, True)
-#Pointers = 29,000 ... 30,000
+memTemporal = MemoryMap(20000, 21000, 22000, 23000, 24000)
+memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, True)
 
-# TODO
-# Convert 'signos' into numerical codes 
+# TODO 
 # Delete memories after each execution
 
 def p_program(p):
