@@ -23,6 +23,13 @@ class Classes:
         currClass = self.get_class(className)
         currClass['dirVir'] = dir
 
+    def get_class_dirVir(self,className):
+        currClass = self.get_class(className)
+        if currClass:
+            return currClass['dirVir']
+        else:
+            return None
+
     #TODO NOTE: THE DIR VIR of classes will require updates to ERA and GOSUB 
     # REMEMBER TO POP on the FLAG of in a class scope!!!
 
