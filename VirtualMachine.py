@@ -330,8 +330,8 @@ class VirtualMachine:
             return float(self.memConstants.float[dir - 26000])
         elif dir >= 27000 and dir < 28000:
             return self.memConstants.char[dir - 27000]
-        # elif dir >= 30000 and dir < 31000:
-        #     return self.memConstants.bool[dir - 30000]
+        elif dir >= 28000 and dir < 29000:
+            return self.memConstants.bool[dir - 28000]
 
         # Local memory map 
         elif dir >= 15000 and dir < 16000:
@@ -371,8 +371,8 @@ class VirtualMachine:
             self.memConstants.float[dir - 26000] = new_val
         elif dir >= 27000 and dir < 28000:
             self.memConstants.char[dir - 27000] = new_val
-        # elif dir >= 30000 and dir < 31000:
-        #     self.memConstants.bool[dir - 30000] = left_op_dir
+        elif dir >= 28000 and dir < 29000:
+            self.memConstants.bool[dir - 28000] = new_val
 
         #Temporal memory map 
         elif dir >= 20000 and dir < 21000:

@@ -225,8 +225,6 @@ reserved = {
     "char": "CHAR",
     "bool": "BOOL",
     "return": "RETURN",
-    "True": "TRUE",
-    "False": "FALSE",
     "and": "AND",
     "or": "OR",
     "while": "WHILE",
@@ -257,6 +255,7 @@ tokens = [
     'CTE_FLOAT', 
     'CTE_CHAR',
     'CTE_STR',
+    'CTE_BOOL',
     
     'EQUALS',
     'EQEQ',
@@ -312,6 +311,9 @@ t_EQEQ                     = r'=='
 
 # A function can be used if there is an associated action.
 # Write the matching regex in the docstring.
+def t_CTE_BOOL(t):
+    r'\b(True|False)\b'
+    return t
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
@@ -332,9 +334,9 @@ def t_error(t):
 lexer = lex()
 
 # Test it out
-data = f'''
+data = f''' False true
 2
-0.5
+0.5 True
 '''
 
 # Give the lexer some input

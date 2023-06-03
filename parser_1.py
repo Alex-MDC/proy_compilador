@@ -447,6 +447,7 @@ def p_var_cte(p):
        | CTE_INT add_constant_int
        | CTE_FLOAT add_constant_float
        | CTE_CHAR add_constant_char
+       | CTE_BOOL add_constant_bool
     '''
     if (len(p) == 3):
         p[0] = p[1] 
@@ -527,6 +528,25 @@ def p_add_constant_char(p):
 
     quadruples.stack_operands.append(virtual_address)
     quadruples.stack_types.append('char')
+
+def p_add_constant_bool(p):
+    "add_constant_bool :"
+    # Add to constants' memory map 
+    if p[-1] == 'False':
+        value = False
+    elif p[-1] == 'True':
+        value = True
+
+    virtual_address = memConstants.addVar(value, 'bool')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    constantsTable.add_var(value, 'bool', virtual_address)
+
+    quadruples.stack_operands.append(virtual_address)
+    quadruples.stack_types.append('bool')
 
 def p_super_expression(p):
     '''
