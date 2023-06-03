@@ -26,9 +26,6 @@ memLocal = MemoryMap(15000, 16000, 17000, 18000, 19000)
 memTemporal = MemoryMap(20000, 21000, 22000, 23000, 24000)
 memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, True)
 
-# TODO 
-# Delete memories after each execution
-
 def p_program(p):
     '''
     program : set_global_scope dv df dc MAIN solve_pending_jump_main block
@@ -62,6 +59,19 @@ def p_program(p):
     # We are out of the current scope
     curr.popScope()
 
+    # Clear all other data structures
+    memGlobal.resetMemoryMap()
+    memLocal.resetMemoryMap()
+    memTemporal.resetMemoryMap()
+    memConstants.resetMemoryMap()
+
+    quadruples.clear()
+
+    constantsTable.clear()
+
+    curr.clear()
+
+    arrayHelper.clear()
     p[0] = ('begin program', p[1], p[2], p[3],p[4],p[5])
 
 def p_set_global_scope(p):
@@ -1392,22 +1402,24 @@ data = '''
 program id; { if(a > b) {id = ctef; }; } 
 '''
 
+'''
+For entering code manually in terminal
+'''
+# while True:
+#   try:
+#       s = input('input program > ')
+#   except EOFError:
+#       break
+#   if not s: continue
+#   #result contains the AST tree
+#   result = parser.parse(s)
+#   print(result)
+
 while True:
-  try:
-      s = input('input program > ')
-  except EOFError:
-      break
-  if not s: continue
-  #result contains the AST tree
-  result = parser.parse(s)
-  print(result)
+    filename = input('program file > ')
+    with open(filename, 'r') as file:
+        input_data = file.read()
 
+    result = parser.parse(input_data)
 
-# text = open("pruebas.txt","r")
-# for x in text:
-#     lexer.input(x)
-#     # Tokenize
-#     for tok in lexer:
-#         print(tok)
-#     #parser.parse(x, debug=True)
-#     print(parser.parse(x))
+    print(result)

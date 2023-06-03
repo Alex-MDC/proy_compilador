@@ -1,1 +1,15 @@
-int fact(int x) var int num {num=1; while(x > 0) {num = num * x; x = x-1;} return num} main{print(fact(7));}
+int fact(int x) 
+    var 
+    int num 
+{
+    num=1; 
+    while(x > 0) {
+        num = num * x; 
+        x = x - 1;
+    }
+    return num
+} 
+
+main {
+    print(fact(7), endl);
+}

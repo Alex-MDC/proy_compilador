@@ -26,3 +26,11 @@ class Quadruples:
     def reset_temporal_counter(self):
         self.temporals_counter = 1
     
+    def clear(self):
+        self.stack_operators.clear()
+        self.stack_operands.clear()
+        self.stack_types.clear()
+        self.stack_jumps.clear()
+        
+        self.quadruples.clear()
+        self.temporals_counter = 1
