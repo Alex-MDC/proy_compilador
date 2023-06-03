@@ -41,3 +41,6 @@ class VariableTable:
     def print_var_table(self):
         for var_name, var_data in self.vars.items():
             print(f"{var_name}: {var_data['data_type']} {var_data['dirVir']} {var_data['dim_list']}")
+
+    def clear(self):
+        self.vars.clear()

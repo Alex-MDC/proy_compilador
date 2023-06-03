@@ -94,3 +94,12 @@ class Context:
 
     def getFuncionName(self):
         return self.function_name
+    
+    def clear(self):
+        self.current_type = ''
+        self.scope.clear()
+
+        self.param_counter.clear()
+        self.param_types_list.clear()
+        self.param_names_list.clear()
+        self.function_name = ''
