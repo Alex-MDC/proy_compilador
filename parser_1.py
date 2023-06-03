@@ -354,7 +354,7 @@ def p_class(p):
 
 def p_class4(p):
      '''
-    class4 :  simple_type ID save_attribute SEMIC 
+    class4 : VAR simple_type ID save_attribute SEMIC 
     '''
 
 def p_set_class_scope(p):

@@ -1,8 +1,9 @@
 var int x class puppy {
-    int age;
-    float woofLoudness;
+    var int age;
+    var float woofLoudness;
 
-    void sit() {
+    int sit() {
+        return 3
     } 
 };
 
