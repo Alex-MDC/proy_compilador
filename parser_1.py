@@ -8,6 +8,7 @@ from SemanticCube import SemanticCube
 from MemoryMap import MemoryMap
 from VirtualMachine import VirtualMachine
 from Array import Array
+from Classes import Classes
 # --- Parser
 
 # Write functions for each grammar rule which is specified in the docstring.
@@ -19,6 +20,7 @@ quadruples = Quadruples()
 constantsTable = VariableTable()
 semanticCube = SemanticCube()
 arrayHelper = Array()
+classTable = Classes()
 
 # Memory maps
 memGlobal = MemoryMap(1000, 2000, 3000, 4000, 5000)
@@ -39,6 +41,9 @@ def p_program(p):
 
     functionTable.print_function_table()
     functionTable.delete_function_table()
+    classTable.print_Classes_Table()
+    classTable.delete_classes_table()
+    print()
     quadruples.print_stacks()
 
     print("Global memory map: ")
@@ -342,19 +347,59 @@ def p_set_scope(p):
 
 def p_class(p):
     '''
-    class : CLASS ID LCURL simple_type ID SEMIC class2 function class3 RCURL SEMIC
+    class : CLASS ID set_class_scope LCURL class4 class2 function class3 RCURL SEMIC
     '''
     
-
     p[0] = ('class',p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11])
+
+def p_class4(p):
+     '''
+    class4 :  simple_type ID save_attribute SEMIC 
+    '''
+
+def p_set_class_scope(p):
+    "set_class_scope :"
+      
+    # Set current scope
+    curr.setScope(p[-1])
+
+    # Each time we enter a new scope we can reuse temporals from before
+    quadruples.reset_temporal_counter()
+
+    # Reset memory map
+    memTemporal.resetMemoryMap()
+
+    # Add class to class table
+    if (classTable.add_class(p[-1]) is None):
+        raise yacc.YaccError(f"Class {p[-1]} already declared")
+
+    # Save dirVir to be equal to quad where function starts
+    classTable.set_class_dirVir(curr.getScope(), len(quadruples.quadruples))
+
+def p_save_attribute(p):
+    "save_attribute :"
+    name = p[-1]
+    #we now continue to handle adding the var and update resources
+    virtual_address = memLocal.addVar(name, curr.getCurrType())
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    # Add attribute and check if it is not already declared within current class
+    if (classTable.add_attribute_to_class(curr.getScope(), name, curr.getCurrType(), virtual_address) is None):
+        raise yacc.YaccError(f"Attribute {name} already declared")
+    
+    # Update class' resources
+    classTable.set_resources_to_class(curr.getScope(), 'var ' + curr.getCurrType())
+
 
 def p_class2(p):
     '''
-    class2 : simple_type ID SEMIC class2
+    class2 : class4 class2
            | empty
     '''
-    if (len(p) == 5):
-     p[0] = ('class2',p[1],p[2],p[3],p[4])
+    if (len(p) == 3):
+     p[0] = ('class2',p[1],p[2])
     else:
         p[0] = p[1] 
 

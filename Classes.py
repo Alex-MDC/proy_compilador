@@ -13,6 +13,7 @@ class Classes:
             'attributes': VariableTable(),
             'methods':FunctionTable(),
             'dirVir':None,
+            'resources': [0] * 8 # [VI, VF, VB, VC, TI, TF, TB, TC]
         }
         return f'Class {name} added!'
     
@@ -27,6 +28,33 @@ class Classes:
         currClass = self.get_class(className)
         if currClass:
             return currClass['dirVir']
+        else:
+            return None
+        
+    def set_resources_to_class(self, class_name, resource_name):
+        currClass = self.get_class(class_name)
+
+        if resource_name == 'var int':
+            currClass['resources'][0] += 1
+        elif resource_name == 'var float':
+            currClass['resources'][1] += 1
+        elif resource_name == 'var bool':
+            currClass['resources'][2] += 1
+        elif resource_name == 'var char':
+            currClass['resources'][3] += 1
+        elif resource_name == 'temp int':
+            currClass['resources'][4] += 1
+        elif resource_name == 'temp float':
+            currClass['resources'][5] += 1
+        elif resource_name == 'temp bool':
+            currClass['resources'][6] += 1
+        elif resource_name == 'temp char':
+            currClass['resources'][7] += 1
+
+    def get_class_resources(self, class_name):
+        currClass = self.get_class(class_name)
+        if currClass:
+            return currClass['resources']
         else:
             return None
 
@@ -122,11 +150,19 @@ class Classes:
 
     #------------class attributes setting-------
         
-    def add_var_to_class(self,className,var_name,data_type,dirVir):
+    def add_attribute_to_class(self,className,var_name,data_type,dirVir):
         currClass = self.get_class(className)
 
         if currClass:
             return currClass['attributes'].add_var(var_name, data_type, dirVir)
+        else:
+            return None
+        
+    def set_dirVir_of_attribute_in_class(self,className,var_name,dirVir):
+        currClass = self.get_class(className)
+
+        if currClass:
+            return currClass['attributes'].set_var_dirVir(var_name, dirVir)
         else:
             return None
     #---------------------------------------
@@ -188,7 +224,14 @@ class Classes:
     def delete_classes_table(self):
         self.classes.clear()
 
-    
+    def print_Classes_Table(self):
+        for class_name, class_data in self.classes.items():
+            print(f'Class: {class_name}')
+            class_data['attributes'].print_var_table()
+            class_data['methods'].print_function_table()
+            print(f"Dir Vir: {class_data['dirVir']}")
+            print(f"Resources: {class_data['resources']}")
+            print()
 
 
     #-------------------
