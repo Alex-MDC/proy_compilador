@@ -51,3 +51,8 @@ class Array:
     def pop_dim_list(self):
         self.dim_list.pop()
     
+    def clear(self):
+        self.var_name.clear()
+        self.stack_dim.clear()
+        self.DIM.clear()
+        self.dim_list.clear()
