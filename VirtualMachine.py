@@ -6,6 +6,7 @@ class VirtualMachine:
         self.functionTable = functionTable
         self.memGlobal = memGlobal
         self.memConstants = memConstants
+        self.executedQuads =[]
 
         # Stack of memories (temporal and local)
         self.memTemp = []
@@ -14,6 +15,7 @@ class VirtualMachine:
 
         self.initMainMem()
         self.executeVM()
+        #self.printExecutedQuads()
     
     def initMainMem(self):
         self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000, 24000))
@@ -33,6 +35,12 @@ class VirtualMachine:
                 for x in range(resources[i]):
                     self.memTemp[-1].addVar('defaultName','char')
 
+
+    def printExecutedQuads(self):
+        print("-------------------START QUADRUPLE EXECUTION ORDER------------------")
+        for index, quad in enumerate(self.executedQuads):
+            print(quad)
+        print("-------------------END QUADRUPLE EXECUTION ORDER------------------")
             
     def executeVM(self):
         instruction_pointer = 0
@@ -40,6 +48,8 @@ class VirtualMachine:
         seenReturn = False
 
         while instruction_pointer < len(self.quadruples) - 1:
+            #save the order of executed quads
+            self.executedQuads.append(self.quadruples[instruction_pointer])
             op_code = self.quadruples[instruction_pointer][0]
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
