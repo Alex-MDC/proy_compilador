@@ -3,6 +3,7 @@ var int x class puppy {
     float woofLoudness;
 
     void sit() {
-        
     } 
 };
+
+main {}
