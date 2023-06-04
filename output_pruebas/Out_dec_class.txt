@@ -1,0 +1,64 @@
+Function: main
+Return type: int
+Dir Vir: None
+Resources: [1, 0, 0, 0, 0, 0, 0, 0]
+Params list: []
+Params names: []
+x: int 1000 []
+
+Class: puppy
+Attributes
+age: int 15000 []
+woofLoudness: float 16000 []
+Methods
+Function: sit
+Return type: int
+Dir Vir: 1
+Resources: [0, 1, 1, 0, 1, 0, 0, 0]
+Params list: ['bool']
+Params names: ['happy']
+sit: int 15000 []
+happy: bool 18000 []
+time: float 16000 []
+
+Class Dir Vir: 1
+Class Resources: [2, 2, 1, 0, 1, 0, 0, 0]
+
+
+Operators: []
+Operands: []
+Types: []
+Jumps: []
+Quadruples:
+0 ['GOTO', 'main', '', 5]
+1 ['+', 15000, 25000, 20000]
+2 ['RETURN', 'sit', '', 20000]
+3 ['ENDFUNC', '', '', 'sit']
+4 ['ENDCLASS', '', '', 'puppy']
+5 ['ENDPROG', '', '', '']
+Global memory map:
+Int: [0]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Local memory map:
+Int: []
+Float: []
+Char: []
+Bool: []
+Compound: []
+Temporal's memory map:
+Int: []
+Float: []
+Char: []
+Bool: []
+Compound: []
+Constants' memory map:
+Int: ['2']
+Float: []
+Char: []
+Bool: []
+Compound: []
+Constant's table:
+2: int 25000 []

@@ -10,6 +10,9 @@ class Context:
         self.param_names_list = []
         self.function_name = ''
 
+        #For classes handling
+        self.curr_class=None
+
         # Operational codes
         self.op_codes = {
             '+' : 0,
