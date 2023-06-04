@@ -138,14 +138,30 @@ class Classes:
 
     #-------class atributes getters------------
      
-    def get_class_attribute(self,name,attribute):
+    def get_class_attribute_dirVir(self,name,attribute):
         currClass = self.get_class(name)
 
         if currClass:
-            return self.classes['attributes'].get_var_dirVir(attribute)
+            return currClass['attributes'].get_var_dirVir(attribute)
         else:
             return None
         
+    def get_attribute_type_in_class(self,name,attribute):
+        currClass = self.get_class(name)
+        # currClass['attributes'].print_var_table()
+        if currClass:
+            return currClass['attributes'].get_var_type(attribute)
+        else:
+            return None
+        
+    def get_dim_of_attribute_in_class(self,className,attribute):
+        currClass = self.get_class(className)
+
+        if currClass:
+            return self.classes['attributes'].get_dim_list(attribute)
+        else:
+            return None
+    
     #-------------------------------------------
 
     #------------class attributes setting-------
@@ -179,7 +195,7 @@ class Classes:
         
     def add_var_to_class_method(self,className,funcName,var_name,data_type, dirVir):
         currClass = self.get_class(className)
-
+        #print(currClass['methods'].print_function_table())
         if currClass:
             return currClass['methods'].add_var_to_function(funcName,var_name,data_type, dirVir)
         else:
@@ -216,7 +232,8 @@ class Classes:
     def set_resources_to_method(self,className,func_name,resource_name):
         currClass = self.get_class(className)
         currClass['methods'].set_resources_to_function(func_name,resource_name)
-    
+        #we must also UPDATE class resources
+        self.set_resources_to_class(className,resource_name)
 
     #--------------------------------------
 
@@ -227,10 +244,12 @@ class Classes:
     def print_Classes_Table(self):
         for class_name, class_data in self.classes.items():
             print(f'Class: {class_name}')
+            print("Attributes")
             class_data['attributes'].print_var_table()
+            print("Methods")
             class_data['methods'].print_function_table()
-            print(f"Dir Vir: {class_data['dirVir']}")
-            print(f"Resources: {class_data['resources']}")
+            print(f"Class Dir Vir: {class_data['dirVir']}")
+            print(f"Class Resources: {class_data['resources']}")
             print()
 
 

@@ -11,7 +11,7 @@ class Context:
         self.function_name = ''
 
         #For classes handling
-        self.class_name=''
+        self.curr_class=None
 
         # Operational codes
         self.op_codes = {

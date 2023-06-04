@@ -2,8 +2,8 @@ var int x class puppy {
     var int age;
     var float woofLoudness;
 
-    int sit() {
-        return 3
+    int sit(bool happy) var float time{
+        return age+2
     } 
 };
 
