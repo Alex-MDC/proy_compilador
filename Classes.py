@@ -158,7 +158,7 @@ class Classes:
         currClass = self.get_class(className)
 
         if currClass:
-            return self.classes['attributes'].get_dim_list(attribute)
+            return currClass['attributes'].get_dim_list(attribute)
         else:
             return None
     
