@@ -49,7 +49,8 @@ class Array:
         return self.dim_list[-1]
     
     def pop_dim_list(self):
-        self.dim_list.pop()
+        if len(self.dim_list) > 0:
+            self.dim_list.pop()
     
     def clear(self):
         self.var_name.clear()
