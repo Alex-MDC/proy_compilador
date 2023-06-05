@@ -30,7 +30,7 @@ memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, True)
 
 def p_program(p):
     '''
-    program : set_global_scope df dc dv MAIN solve_pending_jump_main block
+    program : set_global_scope dc dv df MAIN solve_pending_jump_main block
     '''
     # Add quadruple for end of program
     quad = ['ENDPROG', '', '', '']

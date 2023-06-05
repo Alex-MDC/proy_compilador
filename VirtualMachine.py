@@ -26,13 +26,17 @@ class VirtualMachine:
         
         for i in range(len(resources)):
             if i == 0:
-                self.global_stack[-1].addVar('defaultName', 'int')
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'int')
             elif i == 1:
-                self.global_stack[-1].addVar('defaultName', 'float')
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'float')
             elif i == 2:
-                self.global_stack[-1].addVar('defaultName', 'bool')
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'bool')
             elif i == 3:
-                self.global_stack[-1].addVar('defaultName', 'char')
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'char')
             elif i == 4:
                 for x in range(resources[i]):
                     self.memTemp[-1].addVar('defaultName','int')
