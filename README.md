@@ -27,12 +27,3 @@ Avances:
 4. Execution of sequential statements
 5. Conditional statement execution
 6. Recursion has been tested on a factorial and fibonacci
-
-# Adv 8
-------------------
-Avances:
-1. Arrays have been implemented
-2. All 7 basic tests passed and included in files
-3. Updates to output
-4. Documentation
-5. Classes declaration, test included
