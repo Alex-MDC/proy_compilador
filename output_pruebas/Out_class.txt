@@ -1,0 +1,103 @@
+3 5.4 "oh si" 9 3 Function: main
+Return type: int
+Dir Vir: None
+Resources: [1, 0, 0, 0, 0, 0, 0, 0]
+Params list: []
+Params names: []
+obj: car 5000 []
+hola: int 1000 []
+
+Class: car
+Resources: [4, 1, 0, 0, 2, 0, 0, 0]
+y: float 2000 []
+x: int 1000 []
+z: int 1001 []
+s: int 1002 []
+init: int 1003 []
+Function: s
+Return type: int
+Dir Vir: 1
+Resources: [1, 1, 0, 0, 2, 0, 0, 0]
+Params list: ['float']
+Params names: ['lado']
+lado: float 16000 []
+palo: int 15000 []
+
+Function: init
+Return type: int
+Dir Vir: 4
+Resources: [0, 0, 0, 0, 1, 1, 1, 0]
+Params list: []
+Params names: []
+
+
+Operators: ['-1', '-1']
+Operands: [20000, 20001]
+Types: ['int', 'int']
+Jumps: []
+Quadruples:
+0 ['GOTO', 'main', '', 16]
+1 ['=', 25000, '', 15000]
+2 ['PRINT', '', '', 16000]
+3 ['ENDFUNC', '', 'car', 's']
+4 ['=', 25001, '', 1001]
+5 ['>', 1001, 25002, 23000]
+6 ['GOTOF', 23000, '', 11]
+7 ['*', 25001, 25003, 20000]
+8 ['=', 20000, '', 1001]
+9 ['PRINT', '', '', '"oh si"']
+10 ['GOTO', '', '', 13]
+11 ['-', 26000, 26001, 21000]
+12 ['=', 21000, '', 2000]
+13 ['=', 25004, '', 1000]
+14 ['PRINT', '', '', 1000]
+15 ['ENDFUNC', '', 'car', 'init']
+16 ['=', 25005, '', 1000]
+17 ['PRINT', '', '', 1000]
+18 ['ERACLASS', '', '', 'car']
+19 ['ERA', '', 'car', 's']
+20 ['PARAM', 26002, '', 16000]
+21 ['GOSUB', '', 'car', 's']
+22 ['=', 1002, '', 20000]
+23 ['ENDCLASS', '', '', '']
+24 ['ERACLASS', '', '', 'car']
+25 ['ERA', '', 'car', 'init']
+26 ['GOSUB', '', 'car', 'init']
+27 ['=', 1003, '', 20001]
+28 ['ENDCLASS', '', '', '']
+29 ['PRINT', '', '', 1000]
+30 ['ENDPROG', '', '', '']
+Global memory map:
+Int: [0]
+Float: []
+Char: []
+Bool: []
+Compound: [0]
+Local memory map:
+Int: []
+Float: []
+Char: []
+Bool: []
+Compound: []
+Temporal's memory map:
+Int: [0, 0]
+Float: []
+Char: []
+Bool: []
+Compound: []
+Constants' memory map:
+Int: ['10', '7', '2', '8', '9', '3']
+Float: ['18.2', '2.0', '5.4']
+Char: []
+Bool: []
+Compound: []
+Constant's table:
+10: int 25000 []
+7: int 25001 []
+2: int 25002 []
+8: int 25003 []
+18.2: float 26000 []
+2.0: float 26001 []
+9: int 25004 []
+3: int 25005 []
+5.4: float 26002 []
