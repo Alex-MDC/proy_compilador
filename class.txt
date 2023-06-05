@@ -1,32 +1,47 @@
 class car {
-    var float y, int x, int z
-    int s(float lado)
-    var int palo
-    {
-        palo = 10;
-        print(lado);
+    var int x
+    int setX(int val) {
+        x = val;
     }
-    int init() {
-        z=7;
-        if (z > 2) {
-            z = 7 * 8;
-            print("oh si");
-        } else {
-            y = 18.2 - 2.0;
-        }
-        x = 9;
+    int getX() {
         print(x);
     }
+    int helper(float val) 
+    var float lado
+    {
+        lado = val;
+        if (lado > 2) {
+            print(lado);
+        } else {
+            print(x);
+        }
+    }
 };
-var car obj
+
+class animal {
+    var int x, int y, float papa 
+    int init(int newx, int newy, float newpapa) {
+        x = newx;
+        y = newy;
+        papa = newpapa;
+    }
+    int getter() {
+        print(x, y, papa);
+    }
+};
+
+var car obj, ob
 var int hola
+var animal zebra
 main {
     hola = 3;
-    print(hola);
+    
+    obj.setX(3)
+    obj.getX()
+    obj.helper(1.1)
 
-    obj.s(5.4)
-    obj.init()
-
-    print(hola);
+    ob.setX(9)
+    ob.getX()
+    ob.helper(2.1)
 
 }

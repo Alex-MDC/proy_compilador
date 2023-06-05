@@ -308,6 +308,23 @@ def p_add_object_var(p):
 
     functionTable.add_var_to_function('main', p[-1], curr.getCurrType(), virtual_address)
 
+    # Add class' variables to this object's memory map
+    resources = classTable.get_resources_in_class(curr.getCurrType())
+
+    for i in range(len(resources)):
+        if i == 0:
+            for x in range(resources[i]):
+                functionTable.add_var_to_var_in_function('main', p[-1], 'x', 'int')
+        elif i == 1:
+            for x in range(resources[i]):
+                functionTable.add_var_to_var_in_function('main', p[-1], 'x', 'float')
+        elif i == 2:
+            for x in range(resources[i]):
+                functionTable.add_var_to_var_in_function('main', p[-1], 'x', 'char')
+        elif i == 3:
+            for x in range(resources[i]):
+                functionTable.add_var_to_var_in_function('main', p[-1], 'x', 'bool')
+
 def p_dec_vars9(p):
     '''
     dec_vars9 : COMMA dec_vars8
@@ -1193,7 +1210,9 @@ def p_call(p):
         # Remove fake bottom
         quadruples.stack_operators.pop()
     else:
-
+        # Generate ENDCLASS quad
+        quad = ['ENDCLASS', '', '', '']
+        quadruples.quadruples.append(quad)
         curr.clearCurrentClass()
 
     p[0] = ('call',p[1],p[2])
@@ -1240,7 +1259,8 @@ def p_save_class(p):
     curr.setCurrentObject(p[-1])
 
     # Generate ERA quad
-    quad = ['ERACLASS', '', '', var_type]
+    object = p[-1]
+    quad = ['ERACLASS', '', var_type, object]
     quadruples.quadruples.append(quad)
 
 
@@ -1405,12 +1425,8 @@ def p_add_gosub(p):
         quadruples.increment_counter()
 
         # Update function's resources
-        classTable.set_resources_to_class(curr.getCurrentClass(), 'temp ' + result_type) # TODO CHANGE?
-        classTable.set_resources_to_function_in_class(curr.getCurrentClass(), 's', 'temp ' + result_type)
-
-        # Generate ENDCLASS quad
-        quad = ['ENDCLASS', '', '', '']
-        quadruples.quadruples.append(quad)
+        classTable.set_resources_to_function_in_class(curr.getCurrentClass(), p[-3], 'temp ' + result_type)
+        classTable.set_resources_to_class(curr.getCurrentClass(), 'temp ' + result_type)
 
 def p_condition(p):
     '''

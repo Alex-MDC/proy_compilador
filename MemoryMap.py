@@ -67,8 +67,9 @@ class MemoryMap:
         self.compound.clear()
 
     def printMemoryMap(self):
-        print(f"Int: {self.int}")
-        print(f"Float: {self.float}")
-        print(f"Char: {self.char}")
-        print(f"Bool: {self.bool}")
-        print(f"Compound: {self.compound}")
+        if len(self.int) > 0 or len(self.float) > 0 or len(self.char) > 0 or len(self.bool) > 0 or len(self.compound) > 0:
+            print(f"Int: {self.int}")
+            print(f"Float: {self.float}")
+            print(f"Char: {self.char}")
+            print(f"Bool: {self.bool}")
+            print(f"Compound: {self.compound}")
