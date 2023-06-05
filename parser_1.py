@@ -193,7 +193,6 @@ def p_save_var_name(p):
         if (functionTable.add_var_to_function(curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
             raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
     else:
-        print(curr.getScope(), curr.getCurrType())
         if (classTable.add_var_to_function_in_class(curr.getCurrentClass(), curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
             raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
 
@@ -455,9 +454,6 @@ def p_add_var_class(p):
     classTable.add_var_to_class(curr.getCurrentClass(), p[-1], p[-2])
     classTable.set_resources_to_class(curr.getCurrentClass(), 'var ' + p[-2])
 
-    # functionTable.add_var_to_function('main', p[-1], p[-2], 0)
-    # functionTable.set_resources_to_function('main', 'var ' + p[-2])
-
     virtual_address = memGlobal.addVar(p[-1], p[-2])
     
     # Check if virtual address is in valid range
@@ -465,7 +461,6 @@ def p_add_var_class(p):
         raise yacc.YaccError(f"Stack overflow!")
 
     classTable.set_dirvir_to_var_in_class(curr.getCurrentClass(), p[-1], virtual_address)
-    # functionTable.set_dirVir_of_var_in_function('main', p[-1], virtual_address)
 
 def p_dv_classes3(p):
     '''
@@ -473,16 +468,6 @@ def p_dv_classes3(p):
                 | empty
     '''
     p[0] = p[1]
-
-def p_class3(p):
-    '''
-    class3 : function class3
-           | empty
-    '''
-    if (len(p) == 3):
-     p[0] = ('class3',p[1],p[2])
-    else:
-        p[0] = p[1] 
 
 def p_compound_type(p):
     '''
@@ -797,6 +782,8 @@ def p_expression3(p):
        | LT
        | NOTEQ
        | EQEQ
+       | GREATER_OR_EQ_THAN
+       | LESS_OR_EQ_THAN
     '''
     p[0] = p[1]
 
@@ -812,7 +799,8 @@ def p_check_for_relational_op(p):
     if (len(quadruples.stack_operators) > 0 and quadruples.stack_operators[-1] != '-1'):
         # If i have a relational operator pending
         if (quadruples.stack_operators[-1] == '<' or quadruples.stack_operators[-1] == '>'
-            or quadruples.stack_operators[-1] == '<>' or quadruples.stack_operators[-1] == '=='):
+            or quadruples.stack_operators[-1] == '<>' or quadruples.stack_operators[-1] == '=='
+            or quadruples.stack_operators[-1] == '>=' or quadruples.stack_operators[-1] == '<='):
 
             right_operand = quadruples.stack_operands.pop()
             right_type = quadruples.stack_types.pop()
@@ -1337,32 +1325,6 @@ def p_push_op_class(p):
     var_type = classTable.get_var_type(curr.getCurrentClass(), p[-1])
     quadruples.stack_types.append(var_type)
 
-def p_call6(p):
-    '''
-    call6 : LPAREN call7 RPAREN
-    '''
-    p[0] = ('call6',p[1],p[2],p[3] )
-
-def p_call7(p):
-    '''
-    call7 : exp call8
-        | empty
-    '''
-    if (len(p) == 3):
-        p[0] = ('call7',p[1],p[2])
-    elif(len(p)== 2):
-        p[0] = p[1]
-
-def p_call8(p):
-    '''
-    call8 : COMMA exp call8
-        | empty
-    '''
-    if (len(p) == 4):
-        p[0] = ('call8',p[1],p[2],p[4])
-    elif(len(p)== 2):
-        p[0] = p[1]
-
 def p_add_gosub(p):
     "add_gosub :"
     if curr.getCurrentClass() is None:
@@ -1542,7 +1504,7 @@ def p_return(p):
 def p_ret_ver_supexp(p):
     "ret_ver_supexp :"
     expected_return_type = functionTable.get_var_type_in_function('main',curr.getScope() ) 
-    #print(expected_return_type)
+    
     if( expected_return_type == None):
         raise yacc.YaccError("Error, void function should not have a return statement")
     

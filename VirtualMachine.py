@@ -221,7 +221,7 @@ class VirtualMachine:
                     function_type = self.classTable.get_returnType_of_function(right_op_dir, store_in_dir)
                     instruction_pointer = stack_migajas.pop()
 
-                # if function_type != 'void': TODO add back
+                # if function_type != 'void': TODO add back with validation for functions in classes
                 #     # Virtual address of var with same name as function
                 #     dirvir = self.functionTable.get_var_dirVir_in_function('main', store_in_dir)
                 #     dirvir_value = self.getValueInMemory(dirvir)
