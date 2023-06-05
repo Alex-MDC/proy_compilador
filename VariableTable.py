@@ -1,3 +1,5 @@
+from MemoryMap import MemoryMap
+
 class VariableTable:
     def __init__(self):
         self.vars = {}
@@ -9,7 +11,8 @@ class VariableTable:
         self.vars[name] = { 
             'data_type': data_type,
             'dirVir': dirVir,
-            'dim_list': []
+            'dim_list': [],
+            'memory_map': MemoryMap(1000, 2000, 3000, 4000, 5000)
         }
 
         return f'Variable {name} added!'
@@ -41,6 +44,16 @@ class VariableTable:
     def print_var_table(self):
         for var_name, var_data in self.vars.items():
             print(f"{var_name}: {var_data['data_type']} {var_data['dirVir']} {var_data['dim_list']}")
+            
+            memory = var_data['memory_map'].printMemoryMap()
+            if memory is not None:
+                print(f"inside var table {var_data['memory_map'].printMemoryMap()}")
+    
+    def add_var_to_var(self, var_name, var, type):
+        return self.vars[var_name]['memory_map'].addVar(var, type)
+    
+    def get_resources_of_var(self, var_name):
+        return self.vars[var_name]['memory_map']
 
     def clear(self):
         self.vars.clear()

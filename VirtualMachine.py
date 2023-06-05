@@ -221,7 +221,7 @@ class VirtualMachine:
                     function_type = self.classTable.get_returnType_of_function(right_op_dir, store_in_dir)
                     instruction_pointer = stack_migajas.pop()
 
-                # if function_type != 'void': TODO add back
+                # if function_type != 'void': TODO add back with validation for functions in classes
                 #     # Virtual address of var with same name as function
                 #     dirvir = self.functionTable.get_var_dirVir_in_function('main', store_in_dir)
                 #     dirvir_value = self.getValueInMemory(dirvir)
@@ -249,7 +249,6 @@ class VirtualMachine:
 
                 self.assignValue(dirvir, store_dir_value)
 
-                # TODO: Once a return was seen, the ENDFUNC should follow but nothing else in between RETURN and ENDFUNC should execute
                 instruction_pointer += 1
 
                 seenReturn = True
@@ -318,24 +317,14 @@ class VirtualMachine:
                 instruction_pointer += 1
             
             elif op_code == 'ERACLASS':
-                self.global_stack.append(MemoryMap(1000, 2000, 3000, 4000, 5000))
+                memory = self.functionTable.get_resources_of_var_in_function('main', store_in_dir)
+                self.global_stack.append(memory)
+
                 self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000))
-                resources = self.classTable.get_resources_in_class(store_in_dir)
+                resources = self.classTable.get_resources_in_class(right_op_dir)
                 
                 for i in range(len(resources)):
-                    if i == 0:
-                        for x in range(resources[i]):
-                            self.global_stack[-1].addVar('defaultName', 'int')
-                    elif i == 1:
-                        for x in range(resources[i]):
-                            self.global_stack[-1].addVar('defaultName', 'float')
-                    elif i == 2:
-                        for x in range(resources[i]):
-                            self.global_stack[-1].addVar('defaultName', 'bool')
-                    elif i == 3:
-                        for x in range(resources[i]):
-                            self.global_stack[-1].addVar('defaultName', 'char')
-                    elif i == 4:
+                    if i == 4:
                         for x in range(resources[i]):
                             self.memTemp[-1].addVar('defaultName','int')
                     elif i == 5:

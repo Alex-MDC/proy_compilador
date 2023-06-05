@@ -1,0 +1,23 @@
+var 
+int n, 
+dp[33], 
+i 
+
+int climbStairs(int n) { 
+	if (n == 1) { 
+		return 1
+	} 
+	dp[1]=1; 
+	dp[2]=2; 
+
+	i=3; 
+	while(i < n + 1) { 
+		dp[i] = dp[i-1] + dp[i-2];  
+		i=i+1;
+	} 
+	return dp[n] 
+} 
+
+main { 
+	print(climbStairs(32), endl); 
+} 

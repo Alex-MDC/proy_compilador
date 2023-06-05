@@ -148,6 +148,22 @@ class FunctionTable:
             
     def delete_function_table(self):
         self.functions.clear()
+    
+    def add_var_to_var_in_function(self, func_name, var_name, var, type):
+        func = self.get_function(func_name)
+
+        if func:
+            func['var_table'].add_var_to_var(var_name, var, type)
+        else:
+            return None
+    
+    def get_resources_of_var_in_function(self, func_name, var_name):
+        func = self.get_function(func_name)
+
+        if func:
+            return func['var_table'].get_resources_of_var(var_name)
+        else:
+            return None
 
     def print_function_table(self):
         for func_name, func_data in self.functions.items():
