@@ -1,16 +1,18 @@
 from MemoryMap import *
 
 class VirtualMachine:
-    def __init__(self, quadruples, memConstants, functionTable, memGlobal):
+    def __init__(self, quadruples, memConstants, functionTable, memGlobal, classTable):
         self.quadruples = quadruples
         self.functionTable = functionTable
         self.memGlobal = memGlobal
         self.memConstants = memConstants
+        self.classTable = classTable
         self.executedQuads =[]
 
         # Stack of memories (temporal and local)
         self.memTemp = []
         self.currMem = []
+        self.global_stack = []
         self.isBetweenEraGosub = False
 
         self.initMainMem()
@@ -18,11 +20,24 @@ class VirtualMachine:
         #self.printExecutedQuads()
     
     def initMainMem(self):
+        self.global_stack.append(MemoryMap(1000, 2000, 3000, 4000, 5000))
         self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000, 24000))
         resources = self.functionTable.get_resources_in_function('main')
         
         for i in range(len(resources)):
-            if i == 4:
+            if i == 0:
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'int')
+            elif i == 1:
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'float')
+            elif i == 2:
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'bool')
+            elif i == 3:
+                for x in range(resources[i]):
+                    self.global_stack[-1].addVar('defaultName', 'char')
+            elif i == 4:
                 for x in range(resources[i]):
                     self.memTemp[-1].addVar('defaultName','int')
             elif i == 5:
@@ -54,6 +69,8 @@ class VirtualMachine:
             left_op_dir = self.quadruples[instruction_pointer][1]
             right_op_dir = self.quadruples[instruction_pointer][2]
             store_in_dir = self.quadruples[instruction_pointer][3]
+
+            # print(op_code)
 
             if seenReturn and op_code != 'ENDFUNC':
                 instruction_pointer += 1
@@ -182,10 +199,13 @@ class VirtualMachine:
             elif op_code == 'GOSUB':
                 stack_migajas.append(instruction_pointer + 1)
                 
-                # Quadruple number where function being called starts
-                quad_no = self.functionTable.get_dirVir(store_in_dir)
-                instruction_pointer = quad_no
+                if right_op_dir == '':
+                    # Quadruple number where function being called starts
+                    quad_no = self.functionTable.get_dirVir(store_in_dir)
+                else:
+                    quad_no = self.classTable.get_dirVir_in_function(right_op_dir, store_in_dir)
 
+                instruction_pointer = quad_no
                 self.isBetweenEraGosub = False
 
             elif op_code == 'ENDFUNC':
@@ -194,18 +214,21 @@ class VirtualMachine:
                 IP is set to migaja (quadruple where we left off)
                 '''
                 # We finished executing this function, return to the breadcrumb now
-                instruction_pointer = stack_migajas.pop()
+                if right_op_dir == '':
+                    function_type = self.functionTable.get_returnType_of_function(store_in_dir)
+                    instruction_pointer = stack_migajas.pop()
+                else:
+                    function_type = self.classTable.get_returnType_of_function(right_op_dir, store_in_dir)
+                    instruction_pointer = stack_migajas.pop()
 
-                function_type = self.functionTable.get_returnType_of_function(store_in_dir)
+                # if function_type != 'void': TODO add back
+                #     # Virtual address of var with same name as function
+                #     dirvir = self.functionTable.get_var_dirVir_in_function('main', store_in_dir)
+                #     dirvir_value = self.getValueInMemory(dirvir)
 
-                if function_type != 'void':
-                    # Virtual address of var with same name as function
-                    dirvir = self.functionTable.get_var_dirVir_in_function('main', store_in_dir)
-                    dirvir_value = self.getValueInMemory(dirvir)
-
-                    # Check that a return was seen => var with same name as function is not 0
-                    if dirvir_value == None: # TODO NONE assignment
-                        raise KeyError("Function needs a return statement")
+                #     # Check that a return was seen => var with same name as function is not 0
+                #     if dirvir_value == None: # TODO NONE assignment
+                #         raise KeyError("Function needs a return statement")
                     
                 # We must delete the current working memory to use the previous one in the stack! This helps control the flow of
                 # active memory and passive memory
@@ -239,8 +262,11 @@ class VirtualMachine:
                 self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000))
                 self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
 
-                # Find the function and allocate memory based on resources
-                resources = self.functionTable.get_resources_in_function(store_in_dir)
+                if right_op_dir == '':
+                    # Find the function and allocate memory based on resources
+                    resources = self.functionTable.get_resources_in_function(store_in_dir)
+                else:
+                    resources = self.classTable.get_resources_of_function_in_class(right_op_dir, store_in_dir)
                 
                 for i in range(len(resources)):
                     if i == 0:
@@ -291,6 +317,44 @@ class VirtualMachine:
                 
                 instruction_pointer += 1
             
+            elif op_code == 'ERACLASS':
+                self.global_stack.append(MemoryMap(1000, 2000, 3000, 4000, 5000))
+                self.memTemp.append(MemoryMap(20000, 21000, 22000, 23000,24000))
+                resources = self.classTable.get_resources_in_class(store_in_dir)
+                
+                for i in range(len(resources)):
+                    if i == 0:
+                        for x in range(resources[i]):
+                            self.global_stack[-1].addVar('defaultName', 'int')
+                    elif i == 1:
+                        for x in range(resources[i]):
+                            self.global_stack[-1].addVar('defaultName', 'float')
+                    elif i == 2:
+                        for x in range(resources[i]):
+                            self.global_stack[-1].addVar('defaultName', 'bool')
+                    elif i == 3:
+                        for x in range(resources[i]):
+                            self.global_stack[-1].addVar('defaultName', 'char')
+                    elif i == 4:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','int')
+                    elif i == 5:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','float')
+                    elif i == 6:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','bool')
+                    elif i == 7:
+                        for x in range(resources[i]):
+                            self.memTemp[-1].addVar('defaultName','char')
+
+                instruction_pointer += 1
+            
+            elif op_code == 'ENDCLASS':
+                self.global_stack.pop()
+                self.memTemp.pop()
+                instruction_pointer += 1
+
             else:
                 instruction_pointer += 1
 
@@ -311,15 +375,15 @@ class VirtualMachine:
 
         # Global memory map
         if dir >= 1000 and dir < 2000:
-            return int(self.memGlobal.int[dir - 1000])
+            return int(self.global_stack[-1].int[dir - 1000])
         elif dir >= 2000 and dir < 3000:
-            return float(self.memGlobal.float[dir - 2000])
+            return float(self.global_stack[-1].float[dir - 2000])
         elif dir >= 3000 and dir < 4000:
-            return self.memGlobal.char[dir - 3000]
+            return self.global_stack[-1].char[dir - 3000]
         elif dir >= 4000 and dir < 5000:
-            return self.memGlobal.bool[dir - 4000]
+            return self.global_stack[-1].bool[dir - 4000]
         elif dir >= 5000 and dir < 6000:
-            return self.memGlobal.compound[dir - 5000]
+            return self.global_stack[-1].compound[dir - 5000]
         
         #Temporal memory map 
         elif dir >= 20000 and dir < 21000:
@@ -366,13 +430,13 @@ class VirtualMachine:
 
         # Global memory map
         if dir >= 1000 and dir < 2000:
-            self.memGlobal.int[dir - 1000] = new_val
+            self.global_stack[-1].int[dir - 1000] = new_val
         elif dir >= 2000 and dir < 3000:
-            self.memGlobal.float[dir - 2000] = new_val
+            self.global_stack[-1].float[dir - 2000] = new_val
         elif dir >= 3000 and dir < 4000:
-            self.memGlobal.char[dir - 3000] = new_val
+            self.global_stack[-1].char[dir - 3000] = new_val
         elif dir >= 4000 and dir < 5000:
-            self.memGlobal.bool[dir - 4000] = new_val
+            self.global_stack[-1].bool[dir - 4000] = new_val
         
         # Constant's memory map
         elif dir >= 25000 and dir < 26000:

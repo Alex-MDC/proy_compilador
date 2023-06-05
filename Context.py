@@ -10,6 +10,9 @@ class Context:
         self.param_names_list = []
         self.function_name = ''
 
+        self.current_class = None
+        self.current_object = None
+
         # Operational codes
         self.op_codes = {
             '+' : 0,
@@ -89,12 +92,33 @@ class Context:
         
         return self.param_names_list[index]
     
+    # Function name
     def setFunctionName(self, func_name):
         self.function_name = func_name
 
     def getFuncionName(self):
         return self.function_name
     
+    # Class name
+    def setCurrentClass(self, name):
+        self.current_class = name
+
+    def getCurrentClass(self):
+        return self.current_class
+    
+    def clearCurrentClass(self):
+        self.current_class = None
+
+    # Object name
+    def setCurrentObject(self, name):
+        self.current_object = name
+    
+    def getCurrentObject(self):
+        return self.current_object
+    
+    def clearCurrentObject(self):
+        self.current_object = None
+
     def clear(self):
         self.current_type = ''
         self.scope.clear()

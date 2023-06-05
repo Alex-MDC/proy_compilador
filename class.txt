@@ -1,0 +1,32 @@
+class car {
+    var float y, int x, int z
+    int s(float lado)
+    var int palo
+    {
+        palo = 10;
+        print(lado);
+    }
+    int init() {
+        z=7;
+        if (z > 2) {
+            z = 7 * 8;
+            print("oh si");
+        } else {
+            y = 18.2 - 2.0;
+        }
+        x = 9;
+        print(x);
+    }
+};
+var car obj
+var int hola
+main {
+    hola = 3;
+    print(hola);
+
+    obj.s(5.4)
+    obj.init()
+
+    print(hola);
+
+}

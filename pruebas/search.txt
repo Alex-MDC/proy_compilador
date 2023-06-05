@@ -2,7 +2,9 @@ var
 int arr[10], 
 f, x, i 
 
-int search(int f, int n) {
+int search(int f, int n) 
+var int i
+{
     i = 0; 
     while (i < n) {
         if (f == arr[i]) {

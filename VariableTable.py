@@ -4,7 +4,7 @@ class VariableTable:
 
     def add_var(self, name, data_type, dirVir):
         if name in self.vars:
-            return None
+            raise TypeError(f"Variable {name} already declared!")
         
         self.vars[name] = { 
             'data_type': data_type,

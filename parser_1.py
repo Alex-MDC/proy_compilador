@@ -8,6 +8,7 @@ from SemanticCube import SemanticCube
 from MemoryMap import MemoryMap
 from VirtualMachine import VirtualMachine
 from Array import Array
+from ClassTable import ClassTable
 # --- Parser
 
 # Write functions for each grammar rule which is specified in the docstring.
@@ -19,6 +20,7 @@ quadruples = Quadruples()
 constantsTable = VariableTable()
 semanticCube = SemanticCube()
 arrayHelper = Array()
+classTable = ClassTable()
 
 # Memory maps
 memGlobal = MemoryMap(1000, 2000, 3000, 4000, 5000)
@@ -28,16 +30,18 @@ memConstants = MemoryMap(25000, 26000, 27000, 28000, 29000, True)
 
 def p_program(p):
     '''
-    program : set_global_scope dv df dc MAIN solve_pending_jump_main block
+    program : set_global_scope dc dv df MAIN solve_pending_jump_main block
     '''
     # Add quadruple for end of program
     quad = ['ENDPROG', '', '', '']
     quadruples.quadruples.append(quad)
 
     # Execute code in virtual machine
-    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal)
+    VirtualMachine(quadruples.quadruples, memConstants, functionTable, memGlobal, classTable)
 
     functionTable.print_function_table()
+    classTable.print_class_table()
+
     functionTable.delete_function_table()
     quadruples.print_stacks()
 
@@ -184,14 +188,22 @@ def p_save_var_name(p):
     "save_var_name :"
     arrayHelper.set_var_name(p[-1])
 
-    # Add var and check if variable is not already declared within current function (scope)
-    if (functionTable.add_var_to_function(curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
-        raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
+    if curr.getCurrentClass() is None:
+        # Add var and check if variable is not already declared within current function (scope)
+        if (functionTable.add_var_to_function(curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
+            raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
+    else:
+        print(curr.getScope(), curr.getCurrType())
+        if (classTable.add_var_to_function_in_class(curr.getCurrentClass(), curr.getScope(), arrayHelper.get_var_name(), curr.getCurrType(), 0) is None):
+            raise yacc.YaccError(f"Variable {arrayHelper.get_var_name()} already declared")
 
 def p_add_var(p):
     "add_var :"
-    # Calculate size for memory map
-    dim_list = functionTable.get_dim_of_var_in_function(curr.getScope(), arrayHelper.get_var_name())
+    if curr.getCurrentClass() == None:
+        # Calculate size for memory map
+        dim_list = functionTable.get_dim_of_var_in_function(curr.getScope(), arrayHelper.get_var_name())
+    else:
+        dim_list = classTable.get_dim_of_var_in_function_in_class(curr.getCurrentClass(), curr.getScope(), arrayHelper.get_var_name())
 
     size = 1
     for element in dim_list:
@@ -200,6 +212,7 @@ def p_add_var(p):
     # Add var to memory map N times (N = size)
     for i in range(size):
         virtual_address = 0
+
         if (curr.getScope() == 'main'):
             virtual_address = memGlobal.addVar(arrayHelper.get_var_name(), curr.getCurrType())
         else:
@@ -209,13 +222,19 @@ def p_add_var(p):
         if virtual_address is None:
             raise yacc.YaccError(f"Stack overflow!")
 
-        # Update function's resources
-        functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
+        if curr.getCurrentClass() == None:
+            # Update function's resources
+            functionTable.set_resources_to_function(curr.getScope(), 'var ' + curr.getCurrType())
 
-        if i == 0:
-            # Set virtual address of variable name
-            functionTable.set_dirVir_of_var_in_function(curr.getScope(), arrayHelper.get_var_name(), virtual_address)
-    
+            if i == 0:
+                # Set virtual address of variable name
+                functionTable.set_dirVir_of_var_in_function(curr.getScope(), arrayHelper.get_var_name(), virtual_address)
+        else:
+            classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'var ' + curr.getCurrType())
+            
+            if i == 0:
+                classTable.set_dirVir_of_var_in_function_in_class(curr.getCurrentClass(), curr.getScope(), arrayHelper.get_var_name(), virtual_address)
+
     arrayHelper.pop_var_name()
 
 def p_dec_vars5(p):
@@ -252,17 +271,46 @@ def p_dec_vars7(p):
 
 def p_set_dim(p):
     "set_dim :"
-    functionTable.add_dim_to_var_in_function(curr.getScope(), arrayHelper.get_var_name(), p[-1])
+    if curr.getCurrentClass() == None:
+        functionTable.add_dim_to_var_in_function(curr.getScope(), arrayHelper.get_var_name(), p[-1])
+    else:
+        classTable.add_dim_to_var_in_function_in_class(curr.getCurrentClass(), curr.getScope(), arrayHelper.get_var_name(), p[-1])
 
 def p_dec_vars3(p):
     '''
-    dec_vars3 : compound_type ID dec_vars8
+    dec_vars3 : compound_type verify_class_exists dec_vars8
     '''
     p[0]=('dec_vars3',p[1],p[2],p[3])
 
+def p_verify_class_exists(p):
+    "verify_class_exists :"
+    if classTable.get_class(p[-1]) is None:
+        raise TypeError(f"Class {p[-1]} does not exists. Cannot instantiate object.")
+    
+    curr.setCurrType(p[-1])
+
 def p_dec_vars8(p):
     '''
-    dec_vars8 : COMMA ID dec_vars8
+    dec_vars8 : ID add_object_var dec_vars9
+    '''
+    p[0] = p[1]
+
+def p_add_object_var(p):
+    "add_object_var :"
+    # Objects are just declared globally in main
+    virtual_address = memGlobal.addVar(p[-1], 'id')
+
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+    
+    functionTable.set_resources_to_function('main', 'var ' + curr.getCurrType())
+
+    functionTable.add_var_to_function('main', p[-1], curr.getCurrType(), virtual_address)
+
+def p_dec_vars9(p):
+    '''
+    dec_vars9 : COMMA dec_vars8
         | empty
     '''
     if (len(p) == 4):
@@ -276,7 +324,12 @@ def p_function(p):
     '''
     # Add quad ENDFUNC
     function_name = curr.getScope()
-    quad = ['ENDFUNC', '', '', function_name]
+
+    if curr.getCurrentClass() is None:
+        quad = ['ENDFUNC', '', '', function_name]
+    else:
+        quad = ['ENDFUNC', '', curr.getCurrentClass(), function_name]
+
     quadruples.quadruples.append(quad)
 
     # We are out of that scope, we delete local memory map
@@ -304,6 +357,8 @@ def p_function3(p):
 
 def p_set_scope(p):
     "set_scope :"
+    # Set current scope
+    curr.setScope(p[-1])
     
     # Save potential return type if function is not void
     if(p[-2] != "void"):
@@ -317,15 +372,32 @@ def p_set_scope(p):
         if virtual_address is None:
             raise yacc.YaccError(f"Stack overflow!")
 
-        # Save return type as a duplicate var with the name of the function
-        if (functionTable.add_var_to_function("main", varName, ret_type, virtual_address) is None):
-            raise yacc.YaccError(f"Variable {p[-1]} already declared")
-        
-        # Update function's resources for var declared above
-        functionTable.set_resources_to_function('main', 'var ' + ret_type)
-        
-    # Set current scope
-    curr.setScope(p[-1])
+        if curr.getCurrentClass() == None:
+            # Save return type as a duplicate var with the name of the function
+            if (functionTable.add_var_to_function("main", varName, ret_type, virtual_address) is None):
+                raise yacc.YaccError(f"Variable {p[-1]} already declared")
+            
+            # Update function's resources for var declared above
+            functionTable.set_resources_to_function('main', 'var ' + ret_type)
+
+            # Add function to function table
+            if (functionTable.add_function(p[-1], p[-2]) is None):
+                raise yacc.YaccError(f"Function {p[-1]} already declared")
+
+            # Save dirVir to be equal to quad where function starts
+            functionTable.set_dirVir(curr.getScope(), len(quadruples.quadruples))
+        else:
+            if (classTable.add_var_to_class(curr.getCurrentClass(), varName, ret_type) is None):
+                raise yacc.YaccError(f"Function {p[-1]} already declared")
+            
+            classTable.set_resources_to_class(curr.getCurrentClass(), 'var ' + p[-2])
+
+            classTable.set_dirvir_to_var_in_class(curr.getCurrentClass(), p[-1], virtual_address)
+
+            if (classTable.add_function_to_class(curr.getCurrentClass(), varName, ret_type) is None):
+                raise yacc.YaccError(f"Function {p[-1]} already declared")
+            
+            classTable.set_dirVir_in_function(curr.getCurrentClass(), len(quadruples.quadruples), curr.getScope())
 
     # Each time we enter a new scope we can reuse temporals from before
     quadruples.reset_temporal_counter()
@@ -333,28 +405,57 @@ def p_set_scope(p):
     # Reset memory map
     memTemporal.resetMemoryMap()
 
-    # Add function to function table
-    if (functionTable.add_function(p[-1], p[-2]) is None):
-        raise yacc.YaccError(f"Function {p[-1]} already declared")
-
-    # Save dirVir to be equal to quad where function starts
-    functionTable.set_dirVir(curr.getScope(), len(quadruples.quadruples))
-
 def p_class(p):
     '''
-    class : CLASS ID LCURL simple_type ID SEMIC class2 function class3 RCURL SEMIC
+    class : CLASS ID set_class_scope LCURL dv_classes df RCURL SEMIC
     '''
-    p[0] = ('class',p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11])
+    memGlobal.resetMemoryMap()
+    curr.clearCurrentClass()
+    p[0] = p[1]
 
-def p_class2(p):
+def p_set_class_scope(p):
+    "set_class_scope :"
+    classTable.add_class(p[-1])
+    curr.setCurrentClass(p[-1])
+
+    memGlobal.resetMemoryMap()
+
+def p_dv_classes(p):
     '''
-    class2 : simple_type ID SEMIC class2
-           | empty
+    dv_classes : VAR dv_classes2
+               | empty
     '''
-    if (len(p) == 5):
-     p[0] = ('class2',p[1],p[2],p[3],p[4])
-    else:
-        p[0] = p[1] 
+    p[0] = p[1]
+
+def p_dv_classes2(p):
+    '''
+    dv_classes2 : simple_type ID add_var_class dv_classes3
+    '''
+    p[0] = p[1]
+
+def p_add_var_class(p):
+    "add_var_class :"
+    classTable.add_var_to_class(curr.getCurrentClass(), p[-1], p[-2])
+    classTable.set_resources_to_class(curr.getCurrentClass(), 'var ' + p[-2])
+
+    # functionTable.add_var_to_function('main', p[-1], p[-2], 0)
+    # functionTable.set_resources_to_function('main', 'var ' + p[-2])
+
+    virtual_address = memGlobal.addVar(p[-1], p[-2])
+    
+    # Check if virtual address is in valid range
+    if virtual_address is None:
+        raise yacc.YaccError(f"Stack overflow!")
+
+    classTable.set_dirvir_to_var_in_class(curr.getCurrentClass(), p[-1], virtual_address)
+    # functionTable.set_dirVir_of_var_in_function('main', p[-1], virtual_address)
+
+def p_dv_classes3(p):
+    '''
+    dv_classes3 : COMMA dv_classes2
+                | empty
+    '''
+    p[0] = p[1]
 
 def p_class3(p):
     '''
@@ -370,7 +471,7 @@ def p_compound_type(p):
     '''
     compound_type : ID
     '''
-    p[0] = ('compound_type',p[1])
+    p[0] = p[1]
 
 def p_simple_type(p):
     '''
@@ -387,29 +488,52 @@ def p_assignment(p):
     '''
     assignment : ID EQUALS super_expression SEMIC
     '''
-    # Verify id exists in current scope or global scope
-    if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
-        raise yacc.YaccError(f"Variable {p[1]} is not declared")
-    
-    elif (functionTable.get_var_type_in_function(curr.getScope(), p[1]) != None):
-        assignee_operand = functionTable.get_var_dirVir_in_function(curr.getScope(), p[1])
-        type = functionTable.get_var_type_in_function(curr.getScope(), p[1])
+    if curr.getCurrentClass() is None:
+        # Verify id exists in current scope or global scope
+        if ((functionTable.get_var_type_in_function(curr.getScope(), p[1]) is None) and (functionTable.get_var_type_in_function('main', p[1]) is None)):
+            raise yacc.YaccError(f"Variable {p[1]} is not declared")
+        
+        elif (functionTable.get_var_type_in_function(curr.getScope(), p[1]) != None):
+            assignee_operand = functionTable.get_var_dirVir_in_function(curr.getScope(), p[1])
+            type = functionTable.get_var_type_in_function(curr.getScope(), p[1])
 
-    elif(functionTable.get_var_type_in_function('main', p[1]) != None):
-        assignee_operand = functionTable.get_var_dirVir_in_function('main', p[1])
-        type = functionTable.get_var_type_in_function('main', p[1])
+        elif(functionTable.get_var_type_in_function('main', p[1]) != None):
+            assignee_operand = functionTable.get_var_dirVir_in_function('main', p[1])
+            type = functionTable.get_var_type_in_function('main', p[1])
 
-    # Generate quad
-    operator = p[2]
-    left_operand = quadruples.stack_operands.pop()
+        # Generate quad
+        operator = p[2]
+        left_operand = quadruples.stack_operands.pop()
 
-    # Verify types are same
-    if(type == quadruples.stack_types.pop()):
-        quad = [operator, left_operand, '', assignee_operand]
-        # By now, these two pops have erased the latest remaining operand and type
-        quadruples.quadruples.append(quad)
+        # Verify types are same
+        if(type == quadruples.stack_types.pop()):
+            quad = [operator, left_operand, '', assignee_operand]
+            # By now, these two pops have erased the latest remaining operand and type
+            quadruples.quadruples.append(quad)
+        else:
+            raise yacc.YaccError(f"Type mismatch on assignment!")
     else:
-        raise yacc.YaccError(f"Type mismatch on assignment!")
+        if classTable.get_var_type(curr.getCurrentClass(), p[1]) is None and classTable.get_var_type_in_function(curr.getCurrentClass(), curr.getScope(), p[1]) is None:
+            raise yacc.YaccError(f"Variable {p[1]} is not declared")
+
+        elif classTable.get_var_type_in_function(curr.getCurrentClass(), curr.getScope(), p[1]) != None:
+            assignee_operand = classTable.get_var_dirVir_in_function_in_class(curr.getCurrentClass(), curr.getScope(), p[1])
+            type = classTable.get_var_type_in_function(curr.getCurrentClass(), curr.getScope(), p[1])
+        
+        elif classTable.get_var_type(curr.getCurrentClass(), p[1]) != None:
+            assignee_operand = classTable.get_var_dirVir(curr.getCurrentClass(), p[1])
+            type = classTable.get_var_type(curr.getCurrentClass(), p[1])
+        
+        # Generate quad
+        left_operand = quadruples.stack_operands.pop()
+
+        # Verify types are same
+        if(type == quadruples.stack_types.pop()):
+            quad = ['=', left_operand, '', assignee_operand]
+            # By now, these two pops have erased the latest remaining operand and type
+            quadruples.quadruples.append(quad)
+        else:
+            raise yacc.YaccError(f"Type mismatch on assignment!")
 
     p[0] = ('assignment',p[1],p[2],p[3],p[4] )
 
@@ -424,19 +548,30 @@ def p_parameter(p):
     if virtual_address is None:
         raise yacc.YaccError(f"Stack overflow!")
     
-    # Add param as var and check if param is not already declared within function
-    if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1], virtual_address) is None):
-        raise yacc.YaccError(f"Variable {p[2]} already declared")
+    if curr.getCurrentClass() == None:
+        # Add param as var and check if param is not already declared within function
+        if (functionTable.add_var_to_function(curr.getScope(), p[2], p[1], virtual_address) is None):
+            raise yacc.YaccError(f"Variable {p[2]} already declared")
 
-    # Update function's resources
-    functionTable.set_resources_to_function(curr.getScope(), 'var ' + p[1])
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'var ' + p[1])
+    else:
+        if (classTable.add_var_to_function_in_class(curr.getCurrentClass(), curr.getScope(), p[2], p[1], virtual_address) is None):
+            raise yacc.YaccError(f"Variable {p[2]} already declared")
+
+        # Update function's resources
+        classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'var ' + p[1])
     
     p[0] = ('parameter',p[1],p[2],p[3])
 
 def p_add_parameter(p):
     "add_parameter :"
-    functionTable.add_param_types_to_function(curr.getScope(), p[-2])
-    functionTable.add_param_names_to_function(curr.getScope(), p[-1])
+    if curr.getCurrentClass() == None:
+        functionTable.add_param_types_to_function(curr.getScope(), p[-2])
+        functionTable.add_param_names_to_function(curr.getScope(), p[-1])
+    else:
+        classTable.add_param_types_to_function_in_class(curr.getCurrentClass(), curr.getScope(), p[-2])
+        classTable.add_param_names_to_function_in_class(curr.getCurrentClass(), curr.getScope(), p[-1])
 
 def p_parameter2(p):
     '''
@@ -617,8 +752,11 @@ def p_check_for_boolean_op(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
-                # Update function's resources
-                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                if curr.getCurrentClass() is None:
+                    # Update function's resources
+                    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                else:
+                    classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'temp ' + result_type)
 
 def p_expression(p):
     '''
@@ -689,8 +827,11 @@ def p_check_for_relational_op(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
-                # Update function's resources
-                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                if curr.getCurrentClass() is None:
+                    # Update function's resources
+                    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                else:
+                    classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'temp ' + result_type)
 
 def p_check_for_sum_rest(p):
     "check_for_sum_rest :"
@@ -729,8 +870,11 @@ def p_check_for_sum_rest(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
             
-                # Update function's resources
-                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                if curr.getCurrentClass() is None:
+                    # Update function's resources
+                    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                else:
+                    classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'temp ' + result_type)
 
 def p_exp2(p):
     '''
@@ -786,8 +930,11 @@ def p_check_for_mult_div(p):
                 quadruples.stack_types.append(result_type)
                 quadruples.increment_counter()
 
-                # Update function's resources
-                functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                if curr.getCurrentClass() is None:
+                    # Update function's resources
+                    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+                else:
+                    classTable.set_resources_to_function_in_class(curr.getCurrentClass(), curr.getScope(), 'temp ' + result_type)
 
 def p_term2(p):
     '''
@@ -837,27 +984,45 @@ def p_rule_1(p):
     "rule_1 :"
     arrayHelper.set_var_name(p[-1])
 
-    # Add var to operands' stack. Check var is declared locally, if not, check global. If not either, error undeclared var
-    if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
-        dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
-        type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
+    if curr.getCurrentClass() is None:
+        # Add var to operands' stack. Check var is declared locally, if not, check global. If not either, error undeclared var
+        if (functionTable.get_var_type_in_function(curr.getScope(), p[-1]) != None):
+            dirVir = functionTable.get_var_dirVir_in_function(curr.getScope(), p[-1])
+            type = functionTable.get_var_type_in_function(curr.getScope(), p[-1])
 
-        quadruples.stack_operands.append(dirVir)
-        quadruples.stack_types.append(type)
+            quadruples.stack_operands.append(dirVir)
+            quadruples.stack_types.append(type)
 
-        arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function(curr.getScope(), p[-1]))
+            arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function(curr.getScope(), p[-1]))
 
-    elif (functionTable.get_var_type_in_function('main', p[-1]) != None):
-        dirVir = functionTable.get_var_dirVir_in_function('main', p[-1])
-        type = functionTable.get_var_type_in_function('main', p[-1])
+        elif (functionTable.get_var_type_in_function('main', p[-1]) != None):
+            dirVir = functionTable.get_var_dirVir_in_function('main', p[-1])
+            type = functionTable.get_var_type_in_function('main', p[-1])
 
-        quadruples.stack_operands.append(dirVir)
-        quadruples.stack_types.append(type)
+            quadruples.stack_operands.append(dirVir)
+            quadruples.stack_types.append(type)
 
-        arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function('main', p[-1]))
+            arrayHelper.set_dim_list(functionTable.get_dim_of_var_in_function('main', p[-1]))
 
-    else :
-        raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
+        else :
+            raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
+    else:
+        if classTable.get_var_type_in_function(curr.getCurrentClass(), curr.getScope(), p[-1]) != None:
+            dirVir = classTable.get_var_dirVir_in_function_in_class(curr.getCurrentClass(), curr.getScope(), p[-1])
+            type = classTable.get_var_type_in_function(curr.getCurrentClass(), curr.getScope(), p[-1])
+
+            quadruples.stack_operands.append(dirVir)
+            quadruples.stack_types.append(type)
+
+        elif classTable.get_var_type(curr.getCurrentClass(), p[-1]) != None:
+            dirVir = classTable.get_var_dirVir(curr.getCurrentClass(), p[-1])
+            type = classTable.get_var_type(curr.getCurrentClass(), p[-1])
+
+            quadruples.stack_operands.append(dirVir)
+            quadruples.stack_types.append(type)
+        
+        else :
+            raise yacc.YaccError(f"Variable {p[-1]} is not declared locally nor globally")
 
 def p_variable2(p):
     '''
@@ -1019,37 +1184,65 @@ def p_rule_5(p):
 def p_call(p):
     '''
     call : ID verify_function_exists call2 add_gosub
-       | ID call3
+       | ID save_class call3
     '''
-    # Pop paramCounter from stack since we have finished with all args of curr call
-    curr.resetParamCounter()
+    if curr.getCurrentClass() is None:
+        # Pop paramCounter from stack since we have finished with all args of curr call
+        curr.resetParamCounter()
 
-    # Remove fake bottom
-    quadruples.stack_operators.pop()
+        # Remove fake bottom
+        quadruples.stack_operators.pop()
+    else:
 
-    p[0] = ('call',p[1],p[2] )
+        curr.clearCurrentClass()
+
+    p[0] = ('call',p[1],p[2])
 
 def p_verify_function_exists(p):
     "verify_function_exists :"
 
-    # Verify that function exists in function table
-    if (functionTable.get_function(p[-1]) is None):
-        raise yacc.YaccError(f"Function {p[-1]} not declared")
+    if curr.getCurrentClass() is None:
+        # Verify that function exists in function table
+        if (functionTable.get_function(p[-1]) is None):
+            raise yacc.YaccError(f"Function {p[-1]} not declared")
 
-    # Get params' table of function being called
-    curr.setParamTypesList(functionTable.get_params_types_of_function(p[-1]))
-    curr.setParamNamesList(functionTable.get_params_names_of_function(p[-1]))
-    curr.setFunctionName(p[-1])
-    
-    # Generate ERA quad
-    quad = ['ERA', '', '', p[-1]]
-    quadruples.quadruples.append(quad)
+        # Get params' table of function being called
+        curr.setParamTypesList(functionTable.get_params_types_of_function(p[-1]))
+        curr.setParamNamesList(functionTable.get_params_names_of_function(p[-1]))
+        curr.setFunctionName(p[-1])
+
+        # Generate ERA quad
+        quad = ['ERA', '', '', p[-1]]
+        quadruples.quadruples.append(quad)
+    else:
+        if classTable.get_function(curr.getCurrentClass(), p[-1]) is None:
+            raise yacc.YaccError(f"Function {p[-1]} not declared")
+        
+        # Get params' table of function being called
+        curr.setParamTypesList(classTable.get_param_types_to_function_in_class(curr.getCurrentClass(), p[-1]))
+        curr.setParamNamesList(classTable.get_param_names_to_function_in_class(curr.getCurrentClass(), p[-1]))
+        curr.setFunctionName(p[-1])
+
+        # Generate ERA quad
+        quad = ['ERA', '', curr.getCurrentClass(), p[-1]]
+        quadruples.quadruples.append(quad)
 
     # Push to stack new paramCounter equal to 0
     curr.addParamCounter()
 
     # Add fake bottom
     quadruples.stack_operators.append('-1')
+
+def p_save_class(p):
+    "save_class :"
+    var_type = functionTable.get_var_type_in_function('main', p[-1])
+    curr.setCurrentClass(var_type)
+    curr.setCurrentObject(p[-1])
+
+    # Generate ERA quad
+    quad = ['ERACLASS', '', '', var_type]
+    quadruples.quadruples.append(quad)
+
 
 def p_call2(p):
     '''
@@ -1089,8 +1282,11 @@ def p_verify_argument(p):
     # Add PARAM quad
     param_name = curr.getParamNameInIndex(curr.getParamCounter())
 
-    # Get param_name's dirvir
-    param_dirvir = functionTable.get_var_dirVir_in_function(curr.getFuncionName(), param_name)
+    if curr.getCurrentClass() is None:
+        # Get param_name's dirvir
+        param_dirvir = functionTable.get_var_dirVir_in_function(curr.getFuncionName(), param_name)
+    else:
+        param_dirvir = classTable.get_var_dirVir_in_function_in_class(curr.getCurrentClass(), curr.getFuncionName(), param_name)
 
     quad = ['PARAM', expression, '', param_dirvir]
     quadruples.quadruples.append(quad)
@@ -1103,20 +1299,23 @@ def p_call5(p):
     call5 : COMMA call4
      | empty
     '''
-    if (len(p) == 4):
-        p[0] = ('call5',p[1],p[2],p[3])
-    else:
-        p[0] = ('call5',p[1])
+    p[0] = p[1]
 
 def p_call3(p):
     '''
-    call3 : DOT ID
-        | DOT ID call6
+    call3 : DOT ID push_op_class
+        | DOT ID verify_function_exists call2 add_gosub
     '''
-    if (len(p) == 3):
-        p[0] = ('call3',p[1],p[2])
-    elif(len(p)== 4):
-        p[0] = ('call3',p[1],p[2],p[3])
+    p[0] = p[1]
+
+def p_push_op_class(p):
+    "push_op_class :"
+    # I need to look up this variable the class' var table 
+    virtual_address = classTable.get_var_dirVir(curr.getCurrentClass(), p[-1])
+    quadruples.stack_operands.append(virtual_address)
+
+    var_type = classTable.get_var_type(curr.getCurrentClass(), p[-1])
+    quadruples.stack_types.append(var_type)
 
 def p_call6(p):
     '''
@@ -1146,37 +1345,72 @@ def p_call8(p):
 
 def p_add_gosub(p):
     "add_gosub :"
-
-    # Generate GOSUB quadruple
-    quad = ['GOSUB', '', '', p[-3]]
-    quadruples.quadruples.append(quad)
-
-    temporal = 't' + str(quadruples.get_temporal_counter())
-    result_type = functionTable.get_returnType_of_function(p[-3])
-
-    # Add temporal to memory map
-    virtual_address_temporal = memTemporal.addVar(temporal, result_type)
-
-    # Check if is in range
-    if virtual_address_temporal is None:
-        raise yacc.YaccError(f"Stack overflow!")
-
-    # Virtual address of var with same name as function
-    virtual_address_of_var = functionTable.get_var_dirVir_in_function('main', p[-3])
-    
-    # Parche de recursion / Snapshot
-    if result_type != 'void':
-        quad = ['=', virtual_address_of_var, '', virtual_address_temporal]
+    if curr.getCurrentClass() is None:
+        # Generate GOSUB quadruple
+        quad = ['GOSUB', '', '', p[-3]]
         quadruples.quadruples.append(quad)
 
-    quadruples.stack_types.append(result_type)
-    quadruples.stack_operands.append(virtual_address_temporal)
+        temporal = 't' + str(quadruples.get_temporal_counter())
+        result_type = functionTable.get_returnType_of_function(p[-3])
 
-    # Increment temporal counter
-    quadruples.increment_counter()
-    
-    # Update function's resources
-    functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+        # Add temporal to memory map
+        virtual_address_temporal = memTemporal.addVar(temporal, result_type)
+
+        # Check if is in range
+        if virtual_address_temporal is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        # Virtual address of var with same name as function
+        virtual_address_of_var = functionTable.get_var_dirVir_in_function('main', p[-3])
+        
+        # Parche de recursion / Snapshot
+        if result_type != 'void':
+            quad = ['=', virtual_address_of_var, '', virtual_address_temporal]
+            quadruples.quadruples.append(quad)
+
+        quadruples.stack_types.append(result_type)
+        quadruples.stack_operands.append(virtual_address_temporal)
+
+        # Increment temporal counter
+        quadruples.increment_counter()
+        
+        # Update function's resources
+        functionTable.set_resources_to_function(curr.getScope(), 'temp ' + result_type)
+    else:
+        quad = ['GOSUB', '', curr.getCurrentClass(), p[-3]]
+        quadruples.quadruples.append(quad)
+
+        temporal = 't' + str(quadruples.get_temporal_counter())
+        result_type = classTable.get_returnType_of_function(curr.getCurrentClass(), p[-3])
+
+        # Add temporal to memory map
+        virtual_address_temporal = memTemporal.addVar(temporal, result_type)
+
+        # Check if is in range
+        if virtual_address_temporal is None:
+            raise yacc.YaccError(f"Stack overflow!")
+
+        # Virtual address of var with same name as function
+        virtual_address_of_var = classTable.get_var_dirVir(curr.getCurrentClass(), p[-3])
+
+        # Parche de recursion / Snapshot
+        if result_type != 'void':
+            quad = ['=', virtual_address_of_var, '', virtual_address_temporal]
+            quadruples.quadruples.append(quad)
+
+        quadruples.stack_types.append(result_type)
+        quadruples.stack_operands.append(virtual_address_temporal)
+
+        # Increment temporal counter
+        quadruples.increment_counter()
+
+        # Update function's resources
+        classTable.set_resources_to_class(curr.getCurrentClass(), 'temp ' + result_type) # TODO CHANGE?
+        classTable.set_resources_to_function_in_class(curr.getCurrentClass(), 's', 'temp ' + result_type)
+
+        # Generate ENDCLASS quad
+        quad = ['ENDCLASS', '', '', '']
+        quadruples.quadruples.append(quad)
 
 def p_condition(p):
     '''
