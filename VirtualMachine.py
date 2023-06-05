@@ -240,7 +240,6 @@ class VirtualMachine:
                 self.currMem.append(MemoryMap(15000,16000,17000,18000,19000))
 
                 # Find the function and allocate memory based on resources
-                #TODO ADD A FLAG FOR IF CALL IS TO AFUNCTION TABLE OR CLASS
                 resources = self.functionTable.get_resources_in_function(store_in_dir)
                 
                 for i in range(len(resources)):

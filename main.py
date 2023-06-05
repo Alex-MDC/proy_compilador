@@ -70,16 +70,13 @@
 #                  | empty
 # ------------------------------
 #
-#  <class>         : CLASS ID { class4 class2 function class3 } ;
+#  <class>         : CLASS ID { simple_type ID ; class2 function class3 } ;
 #
-#  <class2>        : class4 class2
+#  <class2>        : simple_type ID ; class2
 #                  | empty
 #
 #  <class3>        : function class3
 #                  | empty
-#
-#  <class4>        : simple_type ID ;
-#       
 # ------------------------------
 #
 #  <compund_type> : id      
